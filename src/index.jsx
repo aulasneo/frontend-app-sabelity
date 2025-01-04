@@ -2,23 +2,27 @@ import 'core-js/stable';
 import 'regenerator-runtime/runtime';
 
 import {
-  APP_INIT_ERROR, APP_READY, subscribe, initialize,
+  APP_INIT_ERROR, APP_READY, subscribe, initialize, getConfig
 } from '@edx/frontend-platform';
 import { AppProvider, ErrorPage } from '@edx/frontend-platform/react';
 import ReactDOM from 'react-dom';
+import { Helmet } from 'react-helmet';
 
 import Header from '@edx/frontend-component-header';
 import FooterSlot from '@openedx/frontend-slot-footer';
 import messages from './i18n';
-import ExamplePage from './example/ExamplePage';
 
 import './index.scss';
+import RoutesPages from './RoutesPages';
 
 subscribe(APP_READY, () => {
   ReactDOM.render(
     <AppProvider>
+      <Helmet>
+        <link rel="shortcut icon" href={getConfig().FAVICON_URL} type="image/x-icon" />
+      </Helmet>
       <Header />
-      <ExamplePage />
+      <RoutesPages />
       <FooterSlot />
     </AppProvider>,
     document.getElementById('root'),
