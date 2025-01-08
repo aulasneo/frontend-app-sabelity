@@ -1,52 +1,112 @@
-import React from 'react';
-import { Button, Card } from '@openedx/paragon';
-
+import React, { useState, useEffect } from 'react';
+import { Button } from '@openedx/paragon';
+import { useIntl } from '@edx/frontend-platform/i18n';
+import { getAuthenticatedUser } from '@edx/frontend-platform/auth';
+import { getConfig } from '@edx/frontend-platform';
+import { getUserData, updateUserPlan } from '../../data/service'
+import PlanCard from '../cards/PlanCard';
 import './stylesHome.css';
+import messages from './messages';
 
-const Home = () => (
-    <>
-        <h1 className="mb-4">Elige el mejor plan a tu medida</h1>
-        <main>
-            <div className="text-center mt-5">
-                <div className="contentCards">
-                    <Card className="p-3" style={{ width: '18rem', height: "20rem" }}>
-                        <Card.Body>
-                            <Card.Header
-                                title="Basic" />
-                            <Card.Section>
-                                Crear hasta 3 cursos.
-                            </Card.Section>
-                            <Button className="buttonSuscribe">Comprar</Button>
-                        </Card.Body>
-                    </Card>
+const Home = () => {
+    const intl = useIntl();
+    const [userData, setUserData] = useState('');
+    const [planLimit, setPlanLimit] = useState('');
+    const user = getAuthenticatedUser();
 
-                    <Card className="p-3" style={{ width: '18rem' }}>
-                        <Card.Body>
-                            <Card.Header
-                                title="Standard" />
-                            <Card.Section>
-                                Crear hasta 5 cursos.
-                            </Card.Section>
-                            <Button className="buttonSuscribe">Comprar</Button>
-                        </Card.Body>
-                    </Card>
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const dataComplet = await getUserData(user.username);
+                setUserData(dataComplet);
+                setPlanLimit(dataComplet.extendedProfile[0].fieldValue);
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+            }
+        };
+        fetchData();
+    }, [user.username]);
 
-                    <Card className="p-3" style={{ width: '18rem' }}>
-                        <Card.Body>
-                            <Card.Header
-                                title="Premium" />
-                            <Card.Section>
-                                Crear hasta 10 cursos.
-                            </Card.Section>
-                            <Button className="buttonSuscribe">Comprar</Button>
-                        </Card.Body>
-                    </Card>
 
+    const handlePlanSelect = async (newLimit) => {
+        try {
+            setPlanLimit(newLimit);
+            const updatedUserData = await updateUserPlan(user.username, newLimit);
+            setUserData(updatedUserData);
+        } catch (error) {
+            console.error('Error updating plan:', error);
+        }
+    };
+
+    const handleBackStudio = () => {
+        const redirectBackStudio = `${getConfig().COURSE_AUTHORING_MICROFRONTEND_URL}/home`;
+        if (redirectBackStudio) {
+            window.location.href = redirectBackStudio;
+        } else {
+            console.error('Redirect URL is undefined');
+        }
+    };
+
+    const plans = [
+        {
+            title: intl.formatMessage(messages.homeBasicTitle),
+            features: intl.formatMessage(messages.homeBasicFeatures),
+            description: intl.formatMessage(messages.homeBasicDescription),
+            price: intl.formatMessage(messages.homeBasicPrice),
+            className: 'card-basic',
+            limit: '1',
+        },
+        {
+            title: intl.formatMessage(messages.homeStandardTitle),
+            features: intl.formatMessage(messages.homeStandardFeatures),
+            description: intl.formatMessage(messages.homeStandardDescription),
+            price: intl.formatMessage(messages.homeStandardPrice),
+            className: 'card-standard',
+            limit: '3',
+        },
+        {
+            title: intl.formatMessage(messages.homePremiumTitle),
+            features: intl.formatMessage(messages.homePremiumFeatures),
+            description: intl.formatMessage(messages.homePremiumDescription),
+            price: intl.formatMessage(messages.homePremiumPrice),
+            className: 'card-premium',
+            limit: '10',
+        },
+    ];
+
+    const currentPlan = plans.find(plan => plan.limit === planLimit)?.title;
+
+    return (
+        <>
+            <h1 className="mt-3 mb-4">{intl.formatMessage(messages.homeTitle)}</h1>
+            <h3>
+                {currentPlan
+                    ? `${intl.formatMessage(messages.suscripcionActualTitle)} ${currentPlan}`
+                    : intl.formatMessage(messages.suscripcionAnyMessage)}
+            </h3>
+            <main>
+                <div className="text-center mt-5">
+                    <div className="contentCards">
+                        {plans.map((plan) => (
+                            <PlanCard
+                                key={plan.title}
+                                title={plan.title}
+                                features={plan.features}
+                                description={plan.description}
+                                price={plan.price}
+                                className={plan.className}
+                                isDisabled={plan.limit === planLimit}
+                                onPlanSelect={() => handlePlanSelect(plan.limit)}
+                            />
+                        ))}
+                    </div>
+                    <Button variant="outline-primary" className="mt-4 mb-3" onClick={handleBackStudio}>
+                        {intl.formatMessage(messages.homeButtonBack)}
+                    </Button>
                 </div>
-                <Button variant="outline-primary" className="mt-4">Volver a Studio</Button>
-            </div>
-        </main>
-    </>
-);
+            </main>
+        </>
+    );
+};
 
 export default Home;

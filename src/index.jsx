@@ -2,7 +2,7 @@ import 'core-js/stable';
 import 'regenerator-runtime/runtime';
 
 import {
-  APP_INIT_ERROR, APP_READY, subscribe, initialize, getConfig
+  APP_INIT_ERROR, APP_READY, subscribe, initialize, getConfig,
 } from '@edx/frontend-platform';
 import { AppProvider, ErrorPage } from '@edx/frontend-platform/react';
 import ReactDOM from 'react-dom';
@@ -16,6 +16,7 @@ import './index.scss';
 import RoutesPages from './RoutesPages';
 
 subscribe(APP_READY, () => {
+ 
   ReactDOM.render(
     <AppProvider>
       <Helmet>

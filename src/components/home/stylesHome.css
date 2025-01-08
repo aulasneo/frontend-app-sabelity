@@ -1,29 +1,124 @@
-
 .content-home {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: calc(100vh - 160px);
-}
-
-.buttonSuscribe {
-  background-color: rgb(239, 146, 69);
-  border-color: rgb(239, 146, 69);
-  border-radius: 6px;
-  height: 44px;
-  margin-top: 105px;
-  color: #1a1a1a;
-  position: relative;
-  transition: -webkit-filter .2s ease-in;
-  transition: filter .2s ease-in;
-  transition: filter .2s ease-in, -webkit-filter .2s ease-in;
-  width: 100%;
+  height: auto;
 }
 
 .contentCards {
   display: flex;
-  justify-content: center;
-  gap: 50px;
   flex-wrap: wrap;
+  justify-content: center;
+  gap: 2rem;
+}
+
+@media (max-width: 768px) {
+  .contentCards {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+.card {
+  text-align: center;
+  transition: transform 0.3s ease, background-color 0.3s ease;
+  background-color: white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.card:hover {
+  transform: scale(1.05);
+  background-color: #f5f5f5;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Tarjetas */
+.card-basic {
+  background-color: #edf5fa;
+  /* Azul claro */
+}
+
+.card-standard {
+  background-color: #fcf1e1;
+  /* Naranja claro */
+}
+
+.card-premium {
+  background-color: #f3fce9;
+  /* Verde claro */
+}
+
+.plan-card-body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.card-description {
+  flex-grow: 1;
+  text-align: justify;
+  font-size: 16px;
+  padding: 1.25rem;
+}
+
+.button-subscribe {
+  margin-top: auto;
+  background-color: rgb(239, 146, 69);
+  border-color: rgb(239, 146, 69);
+  border-radius: 6px;
+  color: #1a1a1a;
+  width: 100%;
+  transition: filter 0.2s ease-in;
+}
+
+.button-subscribe:hover {
+  background-color: #f5f5f5;
+  border-color: rgb(239, 146, 69);
+  color: black;
+}
+
+.plan-card[disabled] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.plan-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.plan-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.plan-card .button-subscribe:disabled {
+  pointer-events: none;
+}
+
+.plan-card .button-subscribe:disabled:hover {
+  background-color: #e9ecef;
+  cursor: not-allowed;
+}
+
+.plan-card .button-subscribe:disabled~.plan-card {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.card-price-content{
+  display: flex;
+  align-items: center;
+  padding-left: 1.25rem;
+}
+
+.card-price{
+  font-size: 30px;
+  font-weight: 900;
+  color: red;
+  margin: 20px 0;
+}
+
+.card-mouth{
+  padding-left: 0.5rem;
 }
