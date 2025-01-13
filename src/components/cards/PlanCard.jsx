@@ -1,9 +1,9 @@
-import React from "react";
-import { Button, Card } from "@openedx/paragon";
-import PropTypes from "prop-types";
-import { useIntl } from "@edx/frontend-platform/i18n";
-import "../home/stylesHome.css";
-import messages from "./messages";
+import React from 'react';
+import { Button, Card } from '@openedx/paragon';
+import PropTypes from 'prop-types';
+import { useIntl } from '@edx/frontend-platform/i18n';
+import '../home/stylesHome.css';
+import messages from './messages';
 
 const PlanCard = ({
   title,
@@ -48,13 +48,13 @@ PlanCard.propTypes = {
   title: PropTypes.string.isRequired,
   description: PropTypes.string.isRequired,
   features: PropTypes.string.isRequired,
+  price: PropTypes.string.isRequired,
+  onPlanSelect: PropTypes.string.isRequired,
   className: PropTypes.string.isRequired,
-  planLimit: PropTypes.string,
   isDisabled: PropTypes.bool,
 };
 
 PlanCard.defaultProps = {
-  planLimit: null,
   isDisabled: false,
 };
 

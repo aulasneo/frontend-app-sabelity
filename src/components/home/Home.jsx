@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from "react";
-import { Button } from "@openedx/paragon";
-import { useIntl } from "@edx/frontend-platform/i18n";
-import { getAuthenticatedUser } from "@edx/frontend-platform/auth";
-import { getConfig } from "@edx/frontend-platform";
-import { getUserData, updateUserPlan } from "../../data/service";
-import PlanCard from "../cards/PlanCard";
-import "./stylesHome.css";
-import messages from "./messages";
+import React, { useState, useEffect } from 'react';
+import { Button } from '@openedx/paragon';
+import { useIntl } from '@edx/frontend-platform/i18n';
+import { getAuthenticatedUser } from '@edx/frontend-platform/auth';
+import { getConfig } from '@edx/frontend-platform';
+import { getUserData, updateUserPlan } from '../../data/service';
+import PlanCard from '../cards/PlanCard';
+import './stylesHome.css';
+import messages from './messages';
 
 const Home = () => {
   const intl = useIntl();
@@ -19,7 +19,7 @@ const Home = () => {
         const data = await getUserData(user.username);
         setPlanLimit(data.extendedProfile[0].fieldValue);
       } catch (error) {
-        console.error("Error fetching user data:", error);
+        console.error('Error fetching user data:', error);
       }
     };
     fetchPlanLimit();
@@ -30,7 +30,7 @@ const Home = () => {
       setPlanLimit(newLimit);
       await updateUserPlan(user.username, newLimit);
     } catch (error) {
-      console.error("Error updating plan:", error);
+      console.error('Error updating plan:', error);
     }
   };
 
@@ -41,7 +41,7 @@ const Home = () => {
     if (redirectBackStudio) {
       window.location.href = redirectBackStudio;
     } else {
-      console.error("Redirect URL is undefined");
+      console.error('Redirect URL is undefined');
     }
   };
 
@@ -51,24 +51,24 @@ const Home = () => {
       features: intl.formatMessage(messages.homeBasicFeatures),
       description: intl.formatMessage(messages.homeBasicDescription),
       price: intl.formatMessage(messages.homeBasicPrice),
-      className: "card-basic",
-      limit: "1",
+      className: 'card-basic',
+      limit: '1',
     },
     {
       title: intl.formatMessage(messages.homeStandardTitle),
       features: intl.formatMessage(messages.homeStandardFeatures),
       description: intl.formatMessage(messages.homeStandardDescription),
       price: intl.formatMessage(messages.homeStandardPrice),
-      className: "card-standard",
-      limit: "3",
+      className: 'card-standard',
+      limit: '3',
     },
     {
       title: intl.formatMessage(messages.homePremiumTitle),
       features: intl.formatMessage(messages.homePremiumFeatures),
       description: intl.formatMessage(messages.homePremiumDescription),
       price: intl.formatMessage(messages.homePremiumPrice),
-      className: "card-premium",
-      limit: "10",
+      className: 'card-premium',
+      limit: '10',
     },
   ];
 
