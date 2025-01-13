@@ -16,7 +16,6 @@ import './index.scss';
 import RoutesPages from './RoutesPages';
 
 subscribe(APP_READY, () => {
- 
   ReactDOM.render(
     <AppProvider>
       <Helmet>
