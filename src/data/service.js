@@ -19,7 +19,7 @@ export const updateUserPlan = async (username, newLimit) => {
         extended_profile: [
             {
                 field_name: 'planLimit',
-                field_value: newLimit, // Valor del nuevo límite
+                field_value: newLimit,
             },
         ],
     };

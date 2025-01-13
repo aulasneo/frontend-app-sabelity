@@ -3,36 +3,32 @@ import { Button } from '@openedx/paragon';
 import { useIntl } from '@edx/frontend-platform/i18n';
 import { getAuthenticatedUser } from '@edx/frontend-platform/auth';
 import { getConfig } from '@edx/frontend-platform';
-import { getUserData, updateUserPlan } from '../../data/service'
+import { getUserData, updateUserPlan } from '../../data/service';
 import PlanCard from '../cards/PlanCard';
 import './stylesHome.css';
 import messages from './messages';
 
 const Home = () => {
     const intl = useIntl();
-    const [userData, setUserData] = useState('');
     const [planLimit, setPlanLimit] = useState('');
     const user = getAuthenticatedUser();
 
     useEffect(() => {
-        const fetchData = async () => {
+        const fetchPlanLimit = async () => {
             try {
-                const dataComplet = await getUserData(user.username);
-                setUserData(dataComplet);
-                setPlanLimit(dataComplet.extendedProfile[0].fieldValue);
+                const data = await getUserData(user.username);
+                setPlanLimit(data.extendedProfile[0].fieldValue);
             } catch (error) {
                 console.error('Error fetching user data:', error);
             }
         };
-        fetchData();
+        fetchPlanLimit();
     }, [user.username]);
-
 
     const handlePlanSelect = async (newLimit) => {
         try {
             setPlanLimit(newLimit);
-            const updatedUserData = await updateUserPlan(user.username, newLimit);
-            setUserData(updatedUserData);
+            await updateUserPlan(user.username, newLimit);
         } catch (error) {
             console.error('Error updating plan:', error);
         }
@@ -74,12 +70,12 @@ const Home = () => {
         },
     ];
 
-    const currentPlan = plans.find(plan => plan.limit === planLimit)?.title;
+    const currentPlan = plans.find((plan) => plan.limit === planLimit)?.title;
 
     return (
         <>
-            <h1 className="mt-3 mb-4">{intl.formatMessage(messages.homeTitle)}</h1>
-            <h3>
+            <h1 className="m-3">{intl.formatMessage(messages.homeTitle)}</h1>
+            <h3 className="m-3">
                 {currentPlan
                     ? `${intl.formatMessage(messages.suscripcionActualTitle)} ${currentPlan}`
                     : intl.formatMessage(messages.suscripcionAnyMessage)}
