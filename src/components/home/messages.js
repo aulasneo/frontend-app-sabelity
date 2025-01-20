@@ -92,7 +92,7 @@ const messages = {
   },
   modalContent2: {
     id: 'home.modalContent2',
-    defaultMessage: 'Si quieres bajar la suscripción debes borrar cursos',
+    defaultMessage: 'Si quieres bajar la suscripción debes borrar cursos.',
   },
   modalButtonClose: {
     id: "home.modalButtonClose",
