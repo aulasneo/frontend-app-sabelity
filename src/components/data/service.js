@@ -1,9 +1,5 @@
 import { getAuthenticatedHttpClient } from '@edx/frontend-platform/auth';
-import {
-  getConfig,
-  camelCaseObject,
-  snakeCaseObject,
-} from '@edx/frontend-platform';
+import { getConfig, camelCaseObject } from '@edx/frontend-platform';
 
 export const getUserData = async (username) => {
   try {
@@ -20,7 +16,7 @@ export const getUserData = async (username) => {
 export const getCourses = async () => {
   try {
     const res = await getAuthenticatedHttpClient().get(
-    `${getConfig().LMS_BASE_URL}/api/courses/v1/courses/`
+      `${getConfig().LMS_BASE_URL}/api/courses/v1/courses/`
     );
     return camelCaseObject(res.data || res.body);
   } catch (error) {
@@ -46,7 +42,7 @@ export const updateUserPlan = async (username, newLimit) => {
     });
     return camelCaseObject(response.data);
   } catch (error) {
-    console.error("Error updating plan:", error);
+    console.error('Error updating plan:', error);
     throw error;
   }
 };

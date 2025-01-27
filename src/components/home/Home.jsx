@@ -13,6 +13,9 @@ const Home = () => {
   const [planLimit, setPlanLimit] = useState();
   const [coursesCount, setCoursesCount] = useState();
   const [showModal, setShowModal] = useState(false);
+  const [newPlanLimit, setNewPlanLimit] = useState();
+  const [deleteCourses, setDeleteCourses] = useState();
+
   const user = getAuthenticatedUser();
 
   useEffect(() => {
@@ -42,12 +45,15 @@ const Home = () => {
   const handlePlanSelect = async (newLimit) => {
     const newLimitNumber = parseInt(newLimit, 10);
     const currentCoursesCount = parseInt(coursesCount, 10);
-
+  
     if (newLimitNumber < currentCoursesCount) {
+      const deleteCount = currentCoursesCount - newLimitNumber;
+      setDeleteCourses(deleteCount);
+      setNewPlanLimit(newLimit);
       setShowModal(true);
       return;
     }
-
+  
     try {
       await updateUserPlan(user.username, newLimit);
       setPlanLimit(newLimit);
@@ -140,10 +146,14 @@ const Home = () => {
             {intl.formatMessage(messages.modalExceedsCourses, {
               currentCourses: coursesCount,
               newLimit: planLimit,
+              limit: newPlanLimit,
             })}
           </p>
           <p className="alertMinPlan">
-            {intl.formatMessage(messages.modalContent)}
+            {intl.formatMessage(messages.modalContent, {
+              limit: newPlanLimit,
+              deleteCourses: deleteCourses
+            })}
           </p>
         </ModalDialog.Body>
         <ModalDialog.Footer>

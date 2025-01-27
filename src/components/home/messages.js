@@ -88,7 +88,7 @@ const messages = {
   },
   modalContent: {
     id: 'home.modalContent',
-    defaultMessage: 'Si quieres bajar la suscripción debes borrar cursos.',
+    defaultMessage: 'Si quieres bajar la suscripción a {limit} cursos, debes borrar {deleteCourses} cursos.',
   },
   modalButtonClose: {
     id: 'home.modalButtonClose',
@@ -98,7 +98,7 @@ const messages = {
     id: 'home.modalExceedsCourses',
     defaultMessage:
       'Actualmente tienes {currentCourses} cursos activos, y tu plan actual tiene un límite de {newLimit} cursos.',
-  },  
+  }
 };
 
 export default messages;
