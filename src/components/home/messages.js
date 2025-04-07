@@ -82,6 +82,11 @@ const messages = {
     defaultMessage: 'Actualmente no tienes ninguna suscripción contratada',
     description: 'Mensaje mostrado cuando no tienes ningun Suscripción',
   },
+  homeButtonSendEmail: {
+    id: 'home.Button.send.message',
+    defaultMessage: 'Póngase en contacto con nosotros',
+    description: 'Mensaje mostrado cuando no tienes ningun Suscripción',
+  },
   modalTitle: {
     id: 'home.modalTitle',
     defaultMessage: 'Advertencia',
@@ -98,7 +103,7 @@ const messages = {
     id: 'home.modalExceedsCourses',
     defaultMessage:
       'Actualmente tienes {currentCourses} cursos activos, y tu plan actual tiene un límite de {newLimit} cursos.',
-  }
+  },
 };
 
 export default messages;

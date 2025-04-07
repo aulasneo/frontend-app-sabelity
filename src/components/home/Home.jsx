@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Button, ModalDialog } from '@openedx/paragon';
-import { useIntl } from '@edx/frontend-platform/i18n';
-import { getAuthenticatedUser } from '@edx/frontend-platform/auth';
-import { getConfig } from '@edx/frontend-platform';
-import { getUserData, updateUserPlan, getCourses } from '../data/service';
-import PlanCard from '../cards/PlanCard';
-import './stylesHome.css';
-import messages from './messages';
+import React, { useState, useEffect } from "react";
+import { Button, ModalDialog } from "@openedx/paragon";
+import { useIntl } from "@edx/frontend-platform/i18n";
+import { getAuthenticatedUser } from "@edx/frontend-platform/auth";
+import { getConfig } from "@edx/frontend-platform";
+import { getUserData, updateUserPlan, getCourses } from "../data/service";
+import PlanCard from "../cards/PlanCard";
+import "./stylesHome.css";
+import messages from "./messages";
 
 const Home = () => {
   const intl = useIntl();
@@ -24,7 +24,7 @@ const Home = () => {
         const data = await getUserData(user.username);
         setPlanLimit(data.extendedProfile[0].fieldValue);
       } catch (error) {
-        console.error('Error fetching user data:', error);
+        console.error("Error fetching user data:", error);
       }
     };
     fetchPlanLimit();
@@ -36,7 +36,7 @@ const Home = () => {
         const data = await getCourses();
         setCoursesCount(data.pagination.count);
       } catch (error) {
-        console.error('Error fetching courses:', error);
+        console.error("Error fetching courses:", error);
       }
     };
     fetchCourses();
@@ -45,7 +45,7 @@ const Home = () => {
   const handlePlanSelect = async (newLimit) => {
     const newLimitNumber = parseInt(newLimit, 10);
     const currentCoursesCount = parseInt(coursesCount, 10);
-  
+
     if (newLimitNumber < currentCoursesCount) {
       const deleteCount = currentCoursesCount - newLimitNumber;
       setDeleteCourses(deleteCount);
@@ -53,66 +53,79 @@ const Home = () => {
       setShowModal(true);
       return;
     }
-  
+
     try {
       await updateUserPlan(user.username, newLimit);
       setPlanLimit(newLimit);
     } catch (error) {
-      console.error('Error updating plan:', error);
+      console.error("Error updating plan:", error);
     }
   };
 
   const handleCloseModal = () => setShowModal(false);
 
   const handleBackStudio = () => {
-    const redirectBackStudio = `${getConfig().COURSE_AUTHORING_MICROFRONTEND_URL}/home`;
+    const redirectBackStudio = `${
+      getConfig().COURSE_AUTHORING_MICROFRONTEND_URL
+    }/home`;
     if (redirectBackStudio) {
       window.location.href = redirectBackStudio;
     } else {
-      console.error('Redirect URL is undefined');
+      console.error("Redirect URL is undefined");
     }
   };
 
-  const plans = [
-    {
-      title: intl.formatMessage(messages.homeBasicTitle),
-      features: intl.formatMessage(messages.homeBasicFeatures),
-      description: intl.formatMessage(messages.homeBasicDescription),
-      price: intl.formatMessage(messages.homeBasicPrice),
-      className: 'card-basic',
-      limit: '1',
-    },
-    {
-      title: intl.formatMessage(messages.homeStandardTitle),
-      features: intl.formatMessage(messages.homeStandardFeatures),
-      description: intl.formatMessage(messages.homeStandardDescription),
-      price: intl.formatMessage(messages.homeStandardPrice),
-      className: 'card-standard',
-      limit: '3',
-    },
-    {
-      title: intl.formatMessage(messages.homePremiumTitle),
-      features: intl.formatMessage(messages.homePremiumFeatures),
-      description: intl.formatMessage(messages.homePremiumDescription),
-      price: intl.formatMessage(messages.homePremiumPrice),
-      className: 'card-premium',
-      limit: '10',
-    },
-  ];
+  const handleSendEmail = () => {
+    const email = "info@aulasneo.com";
+    const subject = "Suscripcion para Sabelity";
+    const body = "Hola, me quiero suscribir a Sabelity...";
 
-  const currentPlan = plans.find((plan) => plan.limit === planLimit)?.title;
+    const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(
+      subject
+    )}&body=${encodeURIComponent(body)}`;
+    window.open(mailtoLink, "_blank");
+  };
+
+  // const plans = [
+  //   {
+  //     title: intl.formatMessage(messages.homeBasicTitle),
+  //     features: intl.formatMessage(messages.homeBasicFeatures),
+  //     description: intl.formatMessage(messages.homeBasicDescription),
+  //     price: intl.formatMessage(messages.homeBasicPrice),
+  //     className: 'card-basic',
+  //     limit: '1',
+  //   },
+  //   {
+  //     title: intl.formatMessage(messages.homeStandardTitle),
+  //     features: intl.formatMessage(messages.homeStandardFeatures),
+  //     description: intl.formatMessage(messages.homeStandardDescription),
+  //     price: intl.formatMessage(messages.homeStandardPrice),
+  //     className: 'card-standard',
+  //     limit: '3',
+  //   },
+  //   {
+  //     title: intl.formatMessage(messages.homePremiumTitle),
+  //     features: intl.formatMessage(messages.homePremiumFeatures),
+  //     description: intl.formatMessage(messages.homePremiumDescription),
+  //     price: intl.formatMessage(messages.homePremiumPrice),
+  //     className: 'card-premium',
+  //     limit: '10',
+  //   },
+  // ];
+
+  // const currentPlan = plans.find((plan) => plan.limit === planLimit)?.title;
 
   return (
     <>
       <h1 className="m-3">{intl.formatMessage(messages.homeTitle)}</h1>
-      <h3 className="m-3">
+      {/* <h3 className="m-3">
         {currentPlan
           ? `${intl.formatMessage(messages.suscripcionActualTitle)} ${currentPlan}`
           : intl.formatMessage(messages.suscripcionAnyMessage)}
-      </h3>
+      </h3> */}
       <main>
         <div className="text-center mt-5">
-          <div className="contentCards">
+          {/* <div className="contentCards">
             {plans.map((plan) => (
               <PlanCard
                 key={plan.title}
@@ -125,14 +138,20 @@ const Home = () => {
                 onPlanSelect={() => handlePlanSelect(plan.limit)}
               />
             ))}
+          </div> */}
+          <div className="content-buttons">
+            <Button variant="primary" onClick={handleSendEmail}>
+              {intl.formatMessage(messages.homeButtonSendEmail)}
+            </Button>
+
+            <Button
+              variant="outline-primary"
+              className="mt-4 mb-3"
+              onClick={handleBackStudio}
+            >
+              {intl.formatMessage(messages.homeButtonBack)}
+            </Button>
           </div>
-          <Button
-            variant="outline-primary"
-            className="mt-4 mb-3"
-            onClick={handleBackStudio}
-          >
-            {intl.formatMessage(messages.homeButtonBack)}
-          </Button>
         </div>
       </main>
 
@@ -152,7 +171,7 @@ const Home = () => {
           <p className="alertMinPlan">
             {intl.formatMessage(messages.modalContent, {
               limit: newPlanLimit,
-              deleteCourses: deleteCourses
+              deleteCourses: deleteCourses,
             })}
           </p>
         </ModalDialog.Body>
