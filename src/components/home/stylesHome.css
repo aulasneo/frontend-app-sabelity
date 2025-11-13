@@ -139,6 +139,10 @@ h4 {
 .additional-info {
   margin-top: 4rem;
   text-align: center;
+  padding: 2rem;
+  background: linear-gradient(135deg, #4e359e1a 0%, #ef92451a 100%);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .additional-info h3 {

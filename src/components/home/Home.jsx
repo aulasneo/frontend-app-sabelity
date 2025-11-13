@@ -5,7 +5,14 @@ import { ModalDialog } from "@openedx/paragon";
 import { useIntl } from "@edx/frontend-platform/i18n";
 import { getAuthenticatedUser } from "@edx/frontend-platform/auth";
 import { getConfig } from "@edx/frontend-platform";
-import { getUserData, updateUserPlan, getCourses } from "../data/service";
+import { 
+  getUserData, 
+  updateUserPlan, 
+  getCourses, 
+  listProducts, 
+  createCheckoutSession, 
+  getUserSubscription 
+} from "../data/service";
 import PlanCard from "../cards/PlanCard";
 import "./stylesHome.css";
 import messages from "./messages";
@@ -17,21 +24,37 @@ const Home = () => {
   const [showModal, setShowModal] = useState(false);
   const [newPlanLimit, setNewPlanLimit] = useState();
   const [deleteCourses, setDeleteCourses] = useState();
+  const [products, setProducts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const user = getAuthenticatedUser();
 
   useEffect(() => {
-    const fetchPlanLimit = async () => {
+    const fetchInitialData = async () => {
       try {
-        const data = await getUserData(user.username);
-        setPlanLimit(data.extendedProfile[0].fieldValue);
+        // Obtener el límite del plan actual
+        const userData = await getUserData(user.username);
+        setPlanLimit(userData.extendedProfile[0].fieldValue);
+        
+        // Obtener los productos de Stripe
+        const productsData = await listProducts();
+        setProducts(productsData);
+        
+        // Verificar si el usuario tiene una suscripción activa
+        try {
+          const subscription = await getUserSubscription();
+          console.log('Current subscription:', subscription);
+        } catch (error) {
+          console.log('No active subscription found');
+        }
       } catch (error) {
-        console.error("Error fetching user data:", error);
+        console.error("Error fetching initial data:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
-    fetchPlanLimit();
+    fetchInitialData();
   }, [user.username]);
-
   useEffect(() => {
     const fetchCourses = async () => {
       try {
@@ -44,20 +67,27 @@ const Home = () => {
     fetchCourses();
   }, []);
 
-  const handlePlanSelect = async (newLimit) => {
-    const newLimitNumber = parseInt(newLimit, 10);
+  const handlePlanSelect = async (plan) => {
+    const newLimitNumber = parseInt(plan.limit, 10);
     const currentCoursesCount = parseInt(coursesCount, 10);
 
     if (newLimitNumber < currentCoursesCount) {
       const deleteCount = currentCoursesCount - newLimitNumber;
       setDeleteCourses(deleteCount);
-      setNewPlanLimit(newLimit);
+      setNewPlanLimit(plan);
       setShowModal(true);
       return;
     }
 
     try {
-      await updateUserPlan(user.username, newLimit);
+      // Redirigir a Stripe Checkout
+      const successUrl = `${window.location.origin}/subscription/success?session_id={CHECKOUT_SESSION_ID}`;
+      const cancelUrl = `${window.location.origin}/subscription/cancel`;
+      
+      const session = await createCheckoutSession(plan.priceId, successUrl, cancelUrl);
+      
+      // Redirigir a la página de pago de Stripe
+      window.location.href = session.url;
       setPlanLimit(newLimit);
     } catch (error) {
       console.error("Error updating plan:", error);
@@ -88,35 +118,48 @@ const Home = () => {
     window.open(mailtoLink, "_blank");
   };
 
-  const plans = [
-    {
-      id: 'basic',
-      title: messages.homeBasicTitle,
-      description: messages.homeBasicDescription,
-      price: messages.homeBasicPrice,
-      limit: 1,
-      isPopular: false
-    },
-    {
-      id: 'standard',
-      title: messages.homeStandardTitle,
-      description: messages.homeStandardDescription,
-      price: messages.homeStandardPrice,
-      limit: 3,
-      isPopular: true
-    },
-    {
-      id: 'premium',
-      title: messages.homePremiumTitle,
-      description: messages.homePremiumDescription,
-      price: messages.homePremiumPrice,
-      limit: 10,
-      isPopular: false
-    },
-  ];
+  const plans = products.length > 0 
+    ? products.map(product => ({
+        id: product.id,
+        title: { defaultMessage: product.name },
+        description: { defaultMessage: product.description },
+        price: { defaultMessage: `USD $${(product.prices[0].unit_amount / 100).toFixed(2)}` },
+        limit: product.metadata.course_limit,
+        priceId: product.prices[0].id,
+        isPopular: product.metadata.is_popular === 'true'
+      }))
+    : [
+        {
+          id: 'basic',
+          title: messages.homeBasicTitle,
+          description: messages.homeBasicDescription,
+          price: messages.homeBasicPrice,
+          limit: 1,
+          priceId: 'price_basic',
+          isPopular: false
+        },
+        {
+          id: 'standard',
+          title: messages.homeStandardTitle,
+          description: messages.homeStandardDescription,
+          price: messages.homeStandardPrice,
+          limit: 3,
+          priceId: 'price_standard',
+          isPopular: true
+        },
+        {
+          id: 'premium',
+          title: messages.homePremiumTitle,
+          description: messages.homePremiumDescription,
+          price: messages.homePremiumPrice,
+          limit: 10,
+          priceId: 'price_premium',
+          isPopular: false
+        },
+      ];
 
-  const currentPlan = plans.find((plan) => plan.limit === planLimit)?.title;
-
+  const currentPlan = plans.find((plan) => plan.limit === planLimit);
+  const currentPlanTitle = currentPlan ? intl.formatMessage(messages[`home${currentPlan.id.charAt(0).toUpperCase() + currentPlan.id.slice(1)}Title`]) : '';
   return (
     <>
       <div className="content-home">
@@ -149,7 +192,7 @@ const Home = () => {
                 className={`card-${plan.id} ${
                   plan.id === 'standard' ? 'card-standard' : ''
                 }`}
-                onPlanSelect={() => handlePlanSelect(plan.limit)}
+                onPlanSelect={() => handlePlanSelect(plan)}
                 isPopular={plan.isPopular}
                 isDisabled={planLimit === plan.limit}
               />
@@ -160,7 +203,7 @@ const Home = () => {
         <div className="additional-content">
           <h4>
             {currentPlan
-              ? `${intl.formatMessage(messages.suscripcionActualTitle)} ${currentPlan}`
+              ? `${intl.formatMessage(messages.suscripcionActualTitle)} ${currentPlanTitle}`
               : intl.formatMessage(messages.suscripcionAnyMessage)}
           </h4>
           
