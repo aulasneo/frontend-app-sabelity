@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Button, ModalDialog } from "@openedx/paragon";
+import { ArrowBack } from '@openedx/paragon/icons';
+import Button from '../common/Button';
+import { ModalDialog } from "@openedx/paragon";
 import { useIntl } from "@edx/frontend-platform/i18n";
 import { getAuthenticatedUser } from "@edx/frontend-platform/auth";
 import { getConfig } from "@edx/frontend-platform";
@@ -64,7 +66,7 @@ const Home = () => {
 
   const handleCloseModal = () => setShowModal(false);
 
-  const handleBackStudio = () => {
+  const handleBackToStudio = () => {
     const redirectBackStudio = `${
       getConfig().COURSE_AUTHORING_MICROFRONTEND_URL
     }/home`;
@@ -86,75 +88,114 @@ const Home = () => {
     window.open(mailtoLink, "_blank");
   };
 
-  // const plans = [
-  //   {
-  //     title: intl.formatMessage(messages.homeBasicTitle),
-  //     features: intl.formatMessage(messages.homeBasicFeatures),
-  //     description: intl.formatMessage(messages.homeBasicDescription),
-  //     price: intl.formatMessage(messages.homeBasicPrice),
-  //     className: 'card-basic',
-  //     limit: '1',
-  //   },
-  //   {
-  //     title: intl.formatMessage(messages.homeStandardTitle),
-  //     features: intl.formatMessage(messages.homeStandardFeatures),
-  //     description: intl.formatMessage(messages.homeStandardDescription),
-  //     price: intl.formatMessage(messages.homeStandardPrice),
-  //     className: 'card-standard',
-  //     limit: '3',
-  //   },
-  //   {
-  //     title: intl.formatMessage(messages.homePremiumTitle),
-  //     features: intl.formatMessage(messages.homePremiumFeatures),
-  //     description: intl.formatMessage(messages.homePremiumDescription),
-  //     price: intl.formatMessage(messages.homePremiumPrice),
-  //     className: 'card-premium',
-  //     limit: '10',
-  //   },
-  // ];
+  const plans = [
+    {
+      id: 'basic',
+      title: messages.homeBasicTitle,
+      description: messages.homeBasicDescription,
+      price: messages.homeBasicPrice,
+      limit: 1,
+      isPopular: false
+    },
+    {
+      id: 'standard',
+      title: messages.homeStandardTitle,
+      description: messages.homeStandardDescription,
+      price: messages.homeStandardPrice,
+      limit: 3,
+      isPopular: true
+    },
+    {
+      id: 'premium',
+      title: messages.homePremiumTitle,
+      description: messages.homePremiumDescription,
+      price: messages.homePremiumPrice,
+      limit: 10,
+      isPopular: false
+    },
+  ];
 
-  // const currentPlan = plans.find((plan) => plan.limit === planLimit)?.title;
+  const currentPlan = plans.find((plan) => plan.limit === planLimit)?.title;
 
   return (
     <>
-      <h1 className="m-3">{intl.formatMessage(messages.homeTitle)}</h1>
-      {/* <h3 className="m-3">
-        {currentPlan
-          ? `${intl.formatMessage(messages.suscripcionActualTitle)} ${currentPlan}`
-          : intl.formatMessage(messages.suscripcionAnyMessage)}
-      </h3> */}
-      <main>
-        <div className="text-center mt-5">
-          {/* <div className="contentCards">
-            {plans.map((plan) => (
-              <PlanCard
-                key={plan.title}
-                title={plan.title}
-                features={plan.features}
-                description={plan.description}
-                price={plan.price}
-                className={plan.className}
-                isDisabled={plan.limit === planLimit}
-                onPlanSelect={() => handlePlanSelect(plan.limit)}
-              />
-            ))}
-          </div> */}
-          <div className="content-buttons">
-            <Button variant="primary" onClick={handleSendEmail}>
-              {intl.formatMessage(messages.homeButtonSendEmail)}
-            </Button>
+      <div className="content-home">
+        <div className="header-container">
+          <div>
+            <h1>{intl.formatMessage(messages.homeTitle)}</h1>
+            <h2>{intl.formatMessage(messages.homeTitle2)}</h2>
+            <h3>{intl.formatMessage(messages.homeDescription)}</h3>
+          </div>
+          <Button
+            variant="outline-primary"
+            iconBefore={ArrowBack}
+            // onClick={() => window.history.back()}
+            onClick={() => handleBackToStudio()}
+            className="back-button"
+          >
+            {intl.formatMessage(messages.homeButtonBack)}
+          </Button>
+        </div>
 
-            <Button
-              variant="outline-primary"
-              className="mt-4 mb-3"
-              onClick={handleBackStudio}
-            >
-              {intl.formatMessage(messages.homeButtonBack)}
-            </Button>
+        <div className="contentCards">
+          {plans.map((plan) => {
+            const price = intl.formatMessage(plan.price);
+            return (
+              <PlanCard
+                key={plan.id}
+                title={intl.formatMessage(plan.title)}
+                description={intl.formatMessage(plan.description)}
+                price={price}
+                className={`card-${plan.id} ${
+                  plan.id === 'standard' ? 'card-standard' : ''
+                }`}
+                onPlanSelect={() => handlePlanSelect(plan.limit)}
+                isPopular={plan.isPopular}
+                isDisabled={planLimit === plan.limit}
+              />
+            );
+          })}
+        </div>
+        
+        <div className="additional-content">
+          <h4>
+            {currentPlan
+              ? `${intl.formatMessage(messages.suscripcionActualTitle)} ${currentPlan}`
+              : intl.formatMessage(messages.suscripcionAnyMessage)}
+          </h4>
+          
+          <div className="features-section">
+            <h3>{intl.formatMessage(messages.featuresTitle)}</h3>
+            <ul className="features-list">
+              <li>{intl.formatMessage(messages.feature1)}</li>
+              <li>{intl.formatMessage(messages.feature2)}</li>
+              <li>{intl.formatMessage(messages.feature3)}</li>
+              <li>{intl.formatMessage(messages.feature4)}</li>
+            </ul>
+          </div>
+          
+          <div className="additional-info">
+            <h3>{intl.formatMessage(messages.additionalInfo)}</h3>
+            <div className="info-grid">
+              <div className="info-item">
+                <div className="info-icon">∞</div>
+                <div className="info-text">
+                  <h4>{intl.formatMessage(messages.unlimitedLearnersTitle)}</h4>
+                  <p>{intl.formatMessage(messages.unlimitedLearnersDesc)}</p>
+                </div>
+              </div>
+              <div className="info-item">
+                <div className="info-icon">💰</div>
+                <div className="info-text">
+                  <h4>{intl.formatMessage(messages.zeroCommissionTitle)}</h4>
+                  <p>{intl.formatMessage(messages.zeroCommissionDesc)}</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </main>
-
+      </div>
+      
       <ModalDialog
         isOpen={showModal}
         onClose={handleCloseModal}

@@ -24,7 +24,7 @@ const messages = {
   },
   suscribeMouth: {
     id: 'suscribe.mouth.text',
-    defaultMessage: 'x mes',
+    defaultMessage: '/month',
   },
 };
 

@@ -1,0 +1,122 @@
+/* Contenedor de tarjetas */
+.contentCards {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  padding: 0 1rem;
+  margin-bottom: 2rem;
+}
+
+/* Estilos base para todas las tarjetas */
+.plan-card {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 2rem 1.5rem;
+  width: 100%;
+  max-width: 300px;
+  position: relative;
+  transition: all 0.3s ease;
+  border: 1px solid #e5e7eb;
+  text-align: center;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.plan-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Etiqueta "Most Popular" */
+.popular-badge {
+  position: absolute;
+  top: 12px;
+  right: -38px;
+  background: #4e359e;
+  color: white;
+  padding: 0.2rem 2.5rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  transform: rotate(45deg);
+  transform-origin: center;
+  text-align: center;
+  width: 150px;
+  letter-spacing: 0.5px;
+  z-index: 1;
+}
+
+/* Badge de Plan Actual */
+.current-plan-badge {
+  background-color: #f0f0f0;
+  color: #4a5568;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border: 1px solid #e2e8f0;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Título de la tarjeta */
+.plan-card h2 {
+  margin: 0.5rem 0 1rem 0;
+  color: #062b60;
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-align: justify;
+}
+
+/* Descripción de la tarjeta */
+.card-description {
+  color: #666666;
+  text-align: justify;
+  min-height: 50px;
+  font-size: 0.9rem;
+  flex-grow: 1;
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+/* Contenedor de precio */
+.card-price-content {
+  display: flex;
+  justify-content: start;
+  align-items: flex-end;
+  margin: 1.5rem 0;
+}
+
+/* Precio */
+.card-price {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #062b60;
+  line-height: 1;
+}
+
+/* Período (ej. /mes) */
+.card-mouth {
+  font-size: 1rem;
+  color: #666666;
+  align-self: flex-end;
+  margin-left: 0.25rem;
+}
+
+/* Efecto hover para las tarjetas */
+.plan-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilos responsivos */
+@media (max-width: 1024px) {
+  .plan-card {
+    max-width: 100%;
+  }
+}
