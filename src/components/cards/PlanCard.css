@@ -20,10 +20,16 @@
   transition: all 0.3s ease;
   border: 1px solid #e5e7eb;
   text-align: center;
-  overflow: hidden;
+  overflow: visible;
   display: flex;
   flex-direction: column;
   height: 100%;
+}
+
+/* Estilo para la tarjeta popular */
+.plan-card.popular {
+  border: 2px solid #4e359e;
+  position: relative;
 }
 
 .plan-card:hover {
@@ -34,19 +40,20 @@
 /* Etiqueta "Most Popular" */
 .popular-badge {
   position: absolute;
-  top: 12px;
-  right: -38px;
   background: #4e359e;
   color: white;
-  padding: 0.2rem 2.5rem;
-  font-size: 0.7rem;
+  padding: 0.25rem 1.5rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  transform: rotate(45deg);
-  transform-origin: center;
   text-align: center;
-  width: 150px;
-  letter-spacing: 0.5px;
   z-index: 1;
+  margin: 0;
+  width: auto;
+  transform: none;
+  letter-spacing: 0.5px;
+  right: 78px;
+  top: -14px;
+  border-radius: 12px;
 }
 
 /* Badge de Plan Actual */

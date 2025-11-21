@@ -9,7 +9,6 @@ import './PlanCard.css';
 const PlanCard = ({
   title,
   description,
-  features,
   price,
   className,
   isDisabled,
@@ -18,15 +17,30 @@ const PlanCard = ({
 }) => {
   const intl = useIntl();
 
+  const handleClick = () => {
+    if (onPlanSelect) {
+      onPlanSelect({
+        id: 'price_1OcYr0Lvx3g2W5Lp5X5X5X5X', // Reemplaza con el ID correcto del precio de Stripe
+        name: title,
+        price: price,
+        // Agrega cualquier otra propiedad que necesites
+      });
+    }
+  };
+
   return (
-    <div className={`plan-card ${className}`}>
-      {isPopular && <div className="popular-badge">Most Popular</div>}
+    <div className={`plan-card ${className} ${isPopular ? 'popular' : ''}`}>
+      {isPopular && (
+        <div className="popular-badge">
+          {intl.formatMessage(messages.mostPopular || { defaultMessage: 'Most Popular' })}
+        </div>
+      )}
       <h2>{title}</h2>
       <p className="card-description">{description}</p>
       <div className="card-price-content">
         <span className="card-price">{price}</span>
         <span className="card-mouth">
-          {intl.formatMessage(messages.suscribeMouth)}
+          {intl.formatMessage(messages.suscribeMouth || { defaultMessage: '/mes' })}
         </span>
       </div>
       {isDisabled ? (
@@ -35,7 +49,7 @@ const PlanCard = ({
         </div>
       ) : (
         <Button
-          onClick={onPlanSelect}
+          onClick={handleClick}
           variant="primary"
           className="full-width"
           messageId="upgrade.plan.button.text"
@@ -49,7 +63,6 @@ const PlanCard = ({
 PlanCard.propTypes = {
   title: PropTypes.string.isRequired,
   description: PropTypes.string.isRequired,
-  features: PropTypes.string,
   price: PropTypes.string.isRequired,
   onPlanSelect: PropTypes.func.isRequired,
   className: PropTypes.string.isRequired,
@@ -60,7 +73,6 @@ PlanCard.propTypes = {
 PlanCard.defaultProps = {
   isDisabled: false,
   isPopular: false,
-  features: '',
 };
 
 export default PlanCard;

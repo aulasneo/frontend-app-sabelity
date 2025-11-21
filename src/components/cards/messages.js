@@ -19,6 +19,11 @@ const messages = {
     defaultMessage: 'Current Plan',
     description: 'Text shown for the current plan',
   },
+  mostPopular: {
+    id: 'planCard.mostPopular',
+    defaultMessage: 'Most Popular',
+    description: 'Badge shown on the most popular plan',
+  },
   upgradePlanBtnText: {
     id: 'upgrade.plan.button.text',
     defaultMessage: 'Subscribe',

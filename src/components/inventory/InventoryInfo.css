@@ -1,0 +1,40 @@
+.inventory-info {
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+  border: 1px solid #dee2e6;
+}
+
+.inventory-title {
+  margin-bottom: 15px;
+  color: #495057;
+}
+
+.inventory-stats {
+  display: flex;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.inventory-stat {
+  font-size: 1rem;
+}
+
+.inventory-available.ok {
+  color: #28a745;
+  font-weight: bold;
+}
+
+.inventory-available.alert {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.inventory-warning {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #fff3cd;
+  border-radius: 4px;
+  color: #856404;
+}

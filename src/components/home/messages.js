@@ -106,7 +106,7 @@ const messages = {
   },
   homeStandardPrice: {
     id: 'home.standard.price',
-    defaultMessage: 'USD $129',
+    defaultMessage: 'USD $149',
     description: 'Price of Standard Subscription',
   },
   homePremiumTitle: {
