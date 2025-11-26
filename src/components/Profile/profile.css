@@ -1,0 +1,13 @@
+/* Profile specific UI states */
+.profile-loading {
+  color: #6b7280; /* gray-500 */
+}
+
+.profile-error {
+  color: #b91c1c; /* red-700 */
+}
+
+/* Optional wrapper tweaks for Profile page */
+.content-home h1 {
+  margin-bottom: 0.75rem;
+}

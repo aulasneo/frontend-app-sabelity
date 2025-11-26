@@ -1,0 +1,122 @@
+/* Contenido adicional */
+.additional-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  
+  /* Sección de características */
+  .features-section {
+    margin: 2rem 0;
+    padding: 1rem;
+    background-color: #f9fafb;
+    border-radius: 12px;
+    text-align: left;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+  
+  .features-section h3 {
+    color: #062b60;
+    margin-bottom: 1.5rem;
+    text-align: start;
+    font-size: 1.3rem;
+    font-weight: 700;
+  }
+  
+  .features-list {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    width: 100%;
+  }
+  
+  .features-section ul {
+    margin: 0 !important;
+  }
+  
+  .features-list li {
+    position: relative;
+    padding-left: 2rem;
+    margin-bottom: 0.75rem;
+    color: #4b5563;
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+  
+  .features-list li:before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #ef9245;
+    font-weight: bold;
+    font-size: 1.1em;
+  }
+  
+  /* Additional Info Section */
+  .additional-info {
+    margin-top: 1rem;
+    text-align: center;
+    padding: 2rem;
+    background: linear-gradient(135deg, #4e359e1a 0%, #ef92451a 100%);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+  
+  .additional-info h3 {
+    color: #062b60;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    font-size: 1.3rem;
+    font-weight: 700;
+  }
+  
+  .additional-info p {
+    color: #4b5563;
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+  }
+  
+  .info-grid {
+    display: grid;
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+  
+  .info-item {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-direction: column;
+  }
+  
+  .info-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  .info-icon {
+    font-size: 1.875rem;
+    flex-shrink: 0;
+    margin-top: 0.25rem;
+  }
+  
+  .info-text h4 {
+    color: #062b60;
+    margin: 0 0 0.5rem 0;
+    font-size: 1.1rem;
+  }
+  
+  .info-text p {
+    color: #6b7280;
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }

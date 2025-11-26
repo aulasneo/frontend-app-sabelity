@@ -169,6 +169,79 @@ const messages = {
     defaultMessage: 'You currently have {currentCourses} active courses, and your current plan has a limit of {newLimit} courses.',
     description: 'Message for exceeding courses',
   },
+  // Cancel subscription flow
+  cancelSubscription: {
+    id: 'home.cancel.subscription',
+    defaultMessage: 'Cancel subscription',
+    description: 'Button text to cancel subscription',
+  },
+  cancellingSubscription: {
+    id: 'home.cancelling.subscription',
+    defaultMessage: 'Cancelling...'
+    ,
+    description: 'Button text while cancelling subscription',
+  },
+  confirmCancelSubscription: {
+    id: 'home.confirm.cancel.subscription',
+    defaultMessage: 'Are you sure you want to cancel your subscription?',
+    description: 'Confirmation message before cancelling subscription',
+  },
+  cancelSubscriptionSuccess: {
+    id: 'home.cancel.subscription.success',
+    defaultMessage: 'Your subscription cancellation has been scheduled.',
+    description: 'Success message after scheduling cancellation',
+  },
+  cancelSubscriptionError: {
+    id: 'home.cancel.subscription.error',
+    defaultMessage: 'There was an error canceling your subscription.',
+    description: 'Error message when cancellation fails',
+  },
+  // Cart flow
+  cartButton: {
+    id: 'home.cart.button',
+    defaultMessage: 'Cart',
+    description: 'Shopping cart button',
+  },
+  cartTitle: {
+    id: 'home.cart.title',
+    defaultMessage: 'Add subscriptions',
+    description: 'Cart modal title',
+  },
+  cartEmpty: {
+    id: 'home.cart.empty',
+    defaultMessage: 'Your cart is empty.',
+    description: 'Shown when there are no items in the cart',
+  },
+  checkoutNoUrl: {
+    id: 'home.cart.checkout.no.url',
+    defaultMessage: 'Checkout created but no URL was returned.',
+    description: 'Shown when backend did not return a redirect url',
+  },
+  cartCheckoutError: {
+    id: 'home.cart.checkout.error',
+    defaultMessage: 'There was an error initiating the checkout.',
+    description: 'Shown when multiple-items checkout fails',
+  },
+  checkoutButton: {
+    id: 'home.cart.checkout.button',
+    defaultMessage: 'Checkout',
+    description: 'Button label for cart checkout',
+  },
+  errorTitle: {
+    id: 'home.error.title',
+    defaultMessage: 'Error',
+    description: 'Generic error modal title',
+  },
+  cartSubtotal: {
+    id: 'home.cart.subtotal',
+    defaultMessage: 'Subtotal',
+    description: 'Subtotal label in cart modal',
+  },
+  noProducts: {
+    id: 'home.cart.no.products',
+    defaultMessage: 'No products available.',
+    description: 'Shown when there are no products to list in the cart modal',
+  },
 };
 
 export default messages;

@@ -1,0 +1,49 @@
+/* HeaderBar styles */
+.back-container {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.cart-container {
+  display: flex;
+  align-items: center;
+}
+
+.cart-button {
+  position: relative; /* for badge positioning */
+  border: 2px solid #ef9245;
+  color: #ef9245;
+  border-radius: 4px;
+  font-weight: 600;
+  padding: 0.4rem 0.8rem;
+  margin-left: 1rem;
+}
+
+/* Badge with total items */
+.cart-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #ef9245;
+  color: #fff;
+  border-radius: 9999px;
+  padding: 0 6px;
+  font-size: 0.72rem;
+  line-height: 18px;
+  height: 18px;
+  min-width: 18px;
+  text-align: center;
+  border: 2px solid #fff; /* halo to stand out */
+}
+
+@media (max-width: 700px) {
+  .back-button {
+    font-size: 0.9rem;
+  }
+}
+
+.back-button:hover {
+  background-color: #ef9245e6;
+  color: white;
+}

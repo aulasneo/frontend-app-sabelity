@@ -1,0 +1,29 @@
+/* Plan cards grid */
+.contentCards {
+  display: grid;
+  /* columnas responsivas pero con ancho máximo razonable para centrar */
+  grid-template-columns: repeat(auto-fit, minmax(285px, 300px));
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto; /* centra el grid dentro del contenedor */
+  justify-content: center;
+  justify-items: center;
+  gap: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+  .contentCards {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 300px));
+    justify-content: center;
+    padding: 0 1.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .contentCards {
+    grid-template-columns: minmax(260px, 1fr);
+    justify-content: center;
+    padding: 0 1rem;
+    gap: 1.5rem;
+  }
+}

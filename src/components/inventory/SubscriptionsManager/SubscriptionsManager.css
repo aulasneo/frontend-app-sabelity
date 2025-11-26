@@ -1,0 +1,337 @@
+/* components/inventory/SubscriptionsManager.css */
+.subs-manager {
+  margin-top: 1rem;
+}
+.subs-title {
+  margin: 0 0 0.75rem;
+  color: #062b60;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.subs-list {
+  display: grid;
+  gap: 12px;
+}
+
+.subs-card {
+  border: 1px solid #eee;
+  border-radius: 10px;
+  background: #fff;
+  padding: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.subs-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.subs-badge {
+  font-size: 0.85rem;
+  font-weight: 700;
+  border-radius: 9999px;
+  padding: 2px 10px;
+  color: #062b60;
+  background: #eef2ff; /* default */
+}
+
+/* variantes por estado */
+.subs-active {
+  background: #e6ffed;
+  color: #065f46;
+}
+.subs-trialing {
+  background: #fff7ed;
+  color: #9a3412;
+}
+.subs-canceled,
+.subs-cancelled {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+.subs-unknown {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.subs-refresh {
+  background: transparent;
+  border: none;
+  color: #ef9245;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 6px;
+}
+
+.subs-card-body {
+  margin: 6px 0 8px;
+}
+
+/* ========== Modal de Checkout (estilo similar al primer modal) ========== */
+.subs-modal-row {
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: grid;
+  grid-template-columns: 1fr auto auto; /* title+price | qty-controls | (espacio reservado) */
+  align-items: center;
+  gap: 12px;
+}
+.subs-modal-title {
+  display: flex;
+  flex-direction: column;
+}
+.subs-modal-title .name {
+  font-weight: 700;
+  color: #111827;
+}
+.subs-modal-title .price {
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+.subs-modal-actions { display: flex; gap: 8px; align-items: center; }
+.subs-modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+}
+.subs-modal-subtotal {
+  font-weight: 700;
+  color: #4c1d95; /* similar al violeta */
+}
+.subs-items {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+  display: grid;
+  gap: 6px;
+}
+.subs-items-header {
+  display: grid;
+  grid-template-columns: 0.1fr 0.7fr 0.2fr 0.1fr 0.1fr;
+  gap: 5rem;
+  align-items: center;
+  padding: 4px 25px 12px 12px;
+  color: #6b7280;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.subs-item-title {
+  font-weight: 600;
+  color: #2b2b2b;
+  font-size: 1rem;
+}
+.subs-item-price {
+  color: #062b60;
+  font-weight: 700;
+}
+.subs-item-qty {
+  color: #6b7280;
+}
+
+.subs-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.subs-actions input[type=\"text\"],
+.subs-actions input[type=\"number\"] {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+.subs-actions input[type=\"number\"] {
+  width: 80px;
+  text-align: center;
+}
+.subs-btn {
+  background: #ef9245;
+  color: #fff;
+  border: 1px solid #ef9245;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-weight: 600;
+  font-size: 14px;
+}
+.subs-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.subs-loading {
+  color: #6b7280;
+}
+.subs-error {
+  color: #b91c1c;
+}
+.subs-success {
+  color: #065f46;
+}
+.subs-empty {
+  color: #6b7280;
+  text-align: center;
+}
+
+/* Subtítulos de secciones dentro de cada suscripción */
+.subs-subtitle {
+  margin: 6px 0;
+  color: #6b21a8;
+  font-weight: 700;
+  font-size: 1.3rem;
+  text-align: center;
+}
+
+/* Lista en filas (adquiridos / disponibles) */
+.subs-items {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+.subs-item-line {
+  display: grid;
+  grid-template-columns: 0.1fr 0.7fr 0.2fr 0.1fr 0.1fr;
+  gap: 2rem;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  background: #fff;
+}
+.subs-item-amount {
+  min-width: 28px;
+  text-align: center;
+  font-weight: 700;
+  color: #111827;
+  font-size: 1rem;
+}
+.spc-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.qty-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #ef9245;
+  border-radius: 6px;
+  background: #fff7f1;
+  color: #ef9245;
+  font-weight: 700;
+  cursor: pointer;
+}
+.qty-input {
+  width: 50px;
+  text-align: center;
+  padding: 6px;
+  font-size: 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  outline: none;
+}
+.spc-save {
+  justify-self: end;
+}
+
+/* Grid de productos (si se usa vista en cards) */
+.subs-products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+.subs-product-card {
+  border: 1px solid #eaeaea;
+  border-radius: 10px;
+  background: #fff;
+  padding: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.spc-title {
+  font-weight: 700;
+  color: #2b2b2b;
+}
+.spc-price {
+  color: #062b60;
+  font-weight: 700;
+}
+/* Summary rows extracted from inline styles */
+.subs-summary {
+    display: grid;
+    gap: 6px;
+    margin-top: 12px;
+  }
+  
+  .subs-summary-row {
+    color: #6b7280;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  
+  .subs-summary-money-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .subs-summary-money {
+    color: #6b7280;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  
+  /* Small margin-top utility used for subtitles */
+  .mt-10 { margin-top: 10px; }
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  /* Ocultar encabezado de tabla para evitar overflow */
+  .subs-items-header { display: none; }
+
+  /* Colapsar la fila a 2 columnas: título+precio y controles */
+  .subs-item-line {
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    align-items: start;
+    padding: 10px;
+  }
+
+  /* Ocultar cantidad adquirida en móvil para ganar espacio */
+  .subs-item-amount { display: none; }
+
+  /* Mostrar precio debajo del título en la primera columna */
+  .subs-item-price {
+    grid-column: 1 / 2;
+    justify-self: start;
+    display: block;
+  }
+
+  /* Controles de cantidad en la segunda columna */
+  .spc-actions {
+    grid-column: 2 / 3;
+    justify-self: end;
+  }
+
+  /* Inputs y botones un poco más compactos */
+  .qty-input { width: 44px; }
+  .qty-btn { width: 30px; height: 30px; }
+
+  /* Resumen: apilar totales y botón */
+  .subs-summary-money-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+}

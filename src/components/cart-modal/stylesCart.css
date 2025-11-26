@@ -1,0 +1,124 @@
+/* Cart modal layout adjustments */
+.cart-modal .pgn__modal-dialog {
+  max-width: 560px;
+}
+
+.cart-modal .pgn__modal-header {
+  position: relative;
+  padding-right: 48px; /* room for close X */
+}
+
+.cart-modal .pgn__modal-close {
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+}
+
+.cart-modal .pgn__modal-footer {
+  display: flex;
+  justify-content: center; /* or space-between */
+  gap: 16px; /* separate buttons */
+  padding-top: 8px;
+}
+
+.cart-modal .pgn__modal-body {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+/* Cart list & items */
+.cart-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 12%;
+}
+
+.cart-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  border: 1px solid #eaeaea;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.cart-item-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.cart-item-title {
+  font-weight: 700;
+  color: #2b2b2b;
+}
+
+.cart-item-price {
+  color: #6b7280; /* gray-500 */
+  font-size: 0.92rem;
+  margin-top: 2px;
+}
+
+.cart-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.qty-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #ef9245;
+  border-radius: 6px;
+  background: #fff7f1;
+  color: #ef9245;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .15s ease;
+}
+
+.qty-btn:hover {
+  background: #ffe9dc;
+}
+
+.qty-input {
+  width: 64px;
+  text-align: center;
+  padding: 6px 8px;
+  border: 1px solid #d1d5db; /* gray-300 */
+  border-radius: 6px;
+  outline: none;
+}
+
+.qty-input::-webkit-outer-spin-button,
+.qty-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.qty-input[type=number] {
+  appearance: textfield; /* standard */
+  -moz-appearance: textfield;
+}
+
+/* Subtotal row */
+.cart-subtotal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-top: 1px solid #eee;
+}
+
+.cart-subtotal-label {
+  color: #374151; /* gray-700 */
+  font-weight: 600;
+}
+
+.cart-subtotal-value {
+  color: #062b60;
+  font-weight: 700;
+}

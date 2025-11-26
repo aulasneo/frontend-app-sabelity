@@ -1,0 +1,98 @@
+.app-content {
+  padding: 24px 24px 32px;
+  overflow-x: hidden; /* evita scroll horizontal cuando hay grids anchos */
+}
+.app-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+}
+
+.app-sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  padding: 16px 8px;
+  background: #ffffff;
+  border-right: 1px solid #d8d8d8;
+}
+
+.sidebar-header {
+  font-weight: 700;
+  color: #6b7280;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  color: #4b5563; /* gray-600 */
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  font-size: 14px;
+}
+
+.nav-item:hover {
+  background: #fff7e6; /* light yellow hover */
+  text-decoration: none;
+}
+
+.nav-item.active {
+  background: #fff7e6; /* soft yellow pill */
+  color: #000; /* brand orange/yellow */
+}
+
+.nav-icon {
+  width: 18px;
+  text-align: center;
+}
+
+.nav-label {
+  font-weight: 600;
+}
+
+/* Footer back link sits separated from menu */
+.sidebar-footer {
+  margin-top: auto;
+  padding: 8px 4px 0;
+}
+
+.back-link {
+  width: 100%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.back-link:hover {
+  background: #fff7e6;
+}
+
+/* Mobile: sidebar colapsado arriba */
+@media (max-width: 768px) {
+  .app-layout {
+    grid-template-columns: 1fr;
+  }
+  .app-sidebar {
+    height: auto;
+    position: static;
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+    width: 100%;
+  }
+  .app-content {
+    padding: 16px;
+  }
+}

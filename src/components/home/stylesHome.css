@@ -1,6 +1,6 @@
 /* Fuente global */
 body {
-  font-family: 'Quicksand', sans-serif;
+  font-family: "Quicksand", sans-serif;
 }
 
 /* Estilos para el contenedor principal */
@@ -8,7 +8,7 @@ body {
   padding: 1rem;
   /* max-width: 1200px; */
   margin: 0 auto;
-  font-family: 'Quicksand', sans-serif;
+  font-family: "Quicksand", sans-serif;
 }
 
 /* Estilos para el título */
@@ -46,195 +46,6 @@ h4 {
 /* Contenedor del encabezado */
 .header-container {
   position: relative;
-  margin-bottom: 3rem;
-  text-align: center;
-}
-
-/* Botón de volver */
-.back-container {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.back-button {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.4rem 0.8rem;
-  border: 2px solid #ef9245;
-  color: #ef9245;
-  border-radius: 4px;
-  font-weight: 600;
-  transition: all 0.2s ease;
-  background-color: transparent;
-}
-
-@media (max-width: 700px) {
-  .back-button {
-    font-size: 0.9rem;
-  }
-}
-
-.back-button:hover {
-  background-color: #ef9245e6;
-  color: white;
-}
-
-/* Contenedor de tarjetas */
-.contentCards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-  padding: 0 2rem;
-  margin: 0 auto 4rem;
-  max-width: 1200px;
-  width: 100%;
-}
-
-/* Contenido adicional */
-.additional-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  text-align: center;
-}
-
-/* Sección de características */
-.features-section {
-  margin: 2rem 0;
-  padding: 1rem;
-  background-color: #f9fafb;
-  border-radius: 12px;
-  text-align: left;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-.features-section h3 {
-  color: #062b60;
-  margin-bottom: 1.5rem;
-  text-align: start;
-  font-size: 1.3rem;
-  font-weight: 700;
-}
-
-.features-list {
-  list-style: none;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: .75rem;
-  width: 100%;
-}
-
-.features-section ul {
-  margin: 0 !important;
-}
-
-.features-list li {
-  position: relative;
-  padding-left: 2rem;
-  margin-bottom: 0.75rem;
-  color: #4b5563;
-  font-size: 1rem;
-  line-height: 1.5;
-}
-
-.features-list li:before {
-  content: '✓';
-  position: absolute;
-  left: 0;
-  color: #ef9245;
-  font-weight: bold;
-  font-size: 1.1em;
-}
-
-/* Additional Info Section */
-.additional-info {
-  margin-top: 1rem;
-  text-align: center;
-  padding: 2rem;
-  background: linear-gradient(135deg, #4e359e1a 0%, #ef92451a 100%);
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.additional-info h3 {
-  color: #062b60;
-  margin-bottom: 1.5rem;
-  text-align: center;
-  font-size: 1.3rem;
-  font-weight: 700;
-}
-
-.additional-info p {
-  color: #4b5563;
-  margin-bottom: 2rem;
-  font-size: 1.1rem;
-}
-
-.info-grid {
-  display: grid;
-  gap: 2rem;
-  margin-top: 2rem;
-}
-
-.info-item {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  text-align: left;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-direction: column;
-}
-
-.info-item:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-.info-icon {
-  font-size: 1.875rem;
-  flex-shrink: 0;
-  margin-top: 0.25rem;
-}
-
-.info-text h4 {
-  color: #062b60;
-  margin: 0 0 0.5rem 0;
-  font-size: 1.1rem;
-}
-
-.info-text p {
-  color: #6b7280;
-  margin: 0;
-  font-size: 0.9rem;
-  line-height: 1.5;
-}
-
-/* Ajustes para pantallas medianas */
-@media (max-width: 1024px) {
-  .contentCards {
-    grid-template-columns: repeat(2, 1fr);
-    padding: 0 1.5rem;
-  }
-  
-  .features-list {
-    grid-template-columns: 1fr;
-    max-width: 500px;
-  }
-}
-
-/* Ajustes para móviles */
-@media (max-width: 640px) {
-  .contentCards {
-    grid-template-columns: 1fr;
-    padding: 0 1rem;
-    gap: 1.5rem;
-  }
 }
 
 /* Botón de volver */
@@ -243,19 +54,19 @@ h4 {
 }
 
 .content-buttons .btn-outline-primary {
-  border: 2px solid #FF6B35;
-  color: #FF6B35;
+  border: 2px solid #ff6b35;
+  color: #ff6b35;
   padding: 0.6rem 2.5rem;
   font-weight: 600;
   font-size: 0.95rem;
   border-radius: 4px;
   transition: all 0.2s ease;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   background-color: transparent;
 }
 
 .content-buttons .btn-outline-primary:hover {
-  background-color: #FF6B35;
+  background-color: #ff6b35;
   color: white;
 }
 
@@ -269,4 +80,14 @@ h4 {
   text-align: center;
   font-size: 0.95rem;
   border-left: 4px solid #d32f2f;
+}
+
+.cancel-button-suscription {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  margin: 12px auto 16px;
+  width: 100%;
+  border: none;
 }

@@ -1,4 +1,4 @@
-.inventory-info {
+.inventory-content {
   background-color: #f8f9fa;
   padding: 20px;
   border-radius: 8px;
@@ -7,14 +7,17 @@
 }
 
 .inventory-title {
-  margin-bottom: 15px;
-  color: #495057;
+  margin: 0 0 0.75rem;
+  color: #062b60;
+  font-weight: 700;
+  font-size: 1.5rem;
 }
 
 .inventory-stats {
   display: flex;
   gap: 30px;
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 .inventory-stat {
@@ -26,7 +29,7 @@
   font-weight: bold;
 }
 
-.inventory-available.alert {
+.inventory-available.no-courses {
   color: #dc3545;
   font-weight: bold;
 }

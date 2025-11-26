@@ -1,0 +1,45 @@
+/* HeaderInventory styles (moved from InventoryInfo.css) */
+.inventory-info {
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+  border: 1px solid #dee2e6;
+}
+
+.inventory-title {
+  margin: 0 0 0.75rem;
+  color: #062b60;
+  font-weight: 700;
+  font-size: 1.5rem;
+}
+
+.inventory-stats {
+  display: flex;
+  gap: 30px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.inventory-stat {
+  font-size: 1rem;
+}
+
+.inventory-available.ok {
+  color: #28a745;
+  font-weight: bold;
+}
+
+.inventory-available.no-courses {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.inventory-warning {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #fff3cd;
+  border-radius: 4px;
+  color: #856404;
+  text-align: center;
+}
