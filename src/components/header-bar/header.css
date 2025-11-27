@@ -1,13 +1,16 @@
 /* HeaderBar styles */
 .back-container {
   display: flex;
-  justify-content: flex-end;
   align-items: center;
+  justify-content: center;
+  flex-direction: column;
 }
 
 .cart-container {
   display: flex;
   align-items: center;
+  width: 100%;
+  justify-content: flex-end;
 }
 
 .cart-button {
@@ -17,7 +20,6 @@
   border-radius: 4px;
   font-weight: 600;
   padding: 0.4rem 0.8rem;
-  margin-left: 1rem;
 }
 
 /* Badge with total items */
@@ -37,13 +39,3 @@
   border: 2px solid #fff; /* halo to stand out */
 }
 
-@media (max-width: 700px) {
-  .back-button {
-    font-size: 0.9rem;
-  }
-}
-
-.back-button:hover {
-  background-color: #ef9245e6;
-  color: white;
-}

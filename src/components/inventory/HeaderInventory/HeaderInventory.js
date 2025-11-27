@@ -5,6 +5,7 @@ import messages from "../messages";
 
 const HeaderInventory = ({ userInventory }) => {
   const intl = useIntl();
+  console.log(userInventory);
   if (!userInventory) return null;
 
   return (

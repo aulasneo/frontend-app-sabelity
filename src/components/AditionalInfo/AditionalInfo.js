@@ -1,21 +1,12 @@
 import React from "react";
 import { useIntl } from "react-intl";
-import InventoryInfo from "../inventory/InventoryInfo/InventoryInfo";
 import "./AditionalInfo.css";
 
 // Props: currentPlan, currentPlanTitle, userInventory, messages
-const AditionalInfo = ({ currentPlan, currentPlanTitle, userInventory, messages }) => {
+const AditionalInfo = ({ currentPlan, currentPlanTitle, messages }) => {
   const intl = useIntl();
   return (
     <div className="additional-content">
-      <h4>
-        {currentPlan
-          ? `${intl.formatMessage(messages.suscripcionActualTitle)} ${currentPlanTitle}`
-          : intl.formatMessage(messages.suscripcionAnyMessage)}
-      </h4>
-
-      {/* {userInventory && <InventoryInfo userInventory={userInventory} />} */}
-
       <div className="features-section">
         <h3>{intl.formatMessage(messages.featuresTitle)}</h3>
         <ul className="features-list">

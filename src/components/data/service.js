@@ -247,6 +247,13 @@ export const listUserSubscriptions = async () => {
     console.log("[service:listUserSubscriptions] OK:", data);
     return data;
   } catch (error) {
+    if (error.response?.status === 404) {
+      // No Stripe customer for this user: treat as no subscriptions
+      console.info(
+        "[service:listUserSubscriptions] 404: No Stripe customer found, returning empty list"
+      );
+      return [];
+    }
     console.error("Error listing user subscriptions:", {
       status: error.response?.status,
       data: error.response?.data,

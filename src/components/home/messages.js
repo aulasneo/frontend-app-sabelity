@@ -69,65 +69,10 @@ const messages = {
     defaultMessage: 'Public/private courses, free or paid',
     description: 'Description for zero commission feature',
   },
-  homeBasicTitle: {
-    id: 'home.basic.title',
-    defaultMessage: '1 Course',
-    description: 'Basic Subscription',
-  },
-  homeBasicFeatures: {
-    id: 'home.basic.features',
-    defaultMessage: 'Basic Subscription - 1 course',
-    description: 'Features of Basic Subscription',
-  },
-  homeBasicDescription: {
-    id: 'home.basic.description',
-    defaultMessage: 'Perfect starting point for educators and small teams.',
-    description: 'Description of Basic Subscription',
-  },
-  homeBasicPrice: {
-    id: 'home.basic.price',
-    defaultMessage: 'USD $69',
-    description: 'Price of Basic Subscription',
-  },
-  homeStandardTitle: {
-    id: 'home.standard.title',
-    defaultMessage: '3 Courses',
-    description: 'Standard Subscription',
-  },
-  homeStandardFeatures: {
-    id: 'home.standard.features',
-    defaultMessage: 'Standard Subscription - up to 3 courses',
-    description: 'Features of Standard Subscription',
-  },
-  homeStandardDescription: {
-    id: 'home.standard.description',
-    defaultMessage: 'Ideal for growing course creators and small businesses.',
-    description: 'Description of Standard Subscription',
-  },
-  homeStandardPrice: {
-    id: 'home.standard.price',
-    defaultMessage: 'USD $149',
-    description: 'Price of Standard Subscription',
-  },
-  homePremiumTitle: {
-    id: 'home.premium.title',
-    defaultMessage: '10 Courses',
-    description: 'Premium Subscription',
-  },
-  homePremiumFeatures: {
-    id: 'home.premium.features',
-    defaultMessage: 'Premium Subscription - up to 10 courses',
-    description: 'Features of Premium Subscription',
-  },
-  homePremiumDescription: {
-    id: 'home.premium.description',
-    defaultMessage: 'Best for organizations with extensive course catalogs.',
-    description: 'Description of Premium Subscription',
-  },
-  homePremiumPrice: {
-    id: 'home.premium.price',
-    defaultMessage: 'USD $199',
-    description: 'Price of Premium Subscription',
+  noPlansAvailable: {
+    id: 'home.no.plans',
+    defaultMessage: 'No plans available at the moment.',
+    description: 'Shown on Home when there are no products to display',
   },
   suscripcionActualTitle: {
     id: 'modal.actual.title',

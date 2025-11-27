@@ -22,12 +22,12 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
-.subs-card-header {
+/* .subs-card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
-}
+} */
 
 .subs-badge {
   font-size: 0.85rem;
@@ -57,13 +57,19 @@
   color: #374151;
 }
 
-.subs-refresh {
+/* .subs-refresh {
   background: transparent;
   border: none;
   color: #ef9245;
   font-weight: 600;
   cursor: pointer;
   padding: 4px 6px;
+} */
+
+.subs-line {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 12px 0;
 }
 
 .subs-card-body {

@@ -72,16 +72,6 @@ const subsMessages = {
     id: 'subs.summary.newTotal',
     defaultMessage: 'New total',
   },
-  suscripcionActualTitle: {
-    id: 'modal.actual.title',
-    defaultMessage: 'Your current subscription: ',
-    description: 'Title for current subscription',
-  },
-  suscripcionAnyMessage: {
-    id: 'modal.subscription.any.message',
-    defaultMessage: 'You currently do not have any active subscription.',
-    description: 'Message shown when there is no active subscription',
-  },
 };
 
 export default subsMessages;

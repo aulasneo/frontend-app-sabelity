@@ -22,7 +22,7 @@ import CartModal from "../../cart-modal/CartModal";
   ingresando priceId y quantity.
 */
 
-const MOCK_MODE = true; // poner en true para demo sin backend
+const MOCK_MODE = false; // poner en true para demo sin backend
 const MOCK_SUBS = [
   {
     id: "sub_001",
@@ -532,6 +532,7 @@ const SubscriptionsManager = () => {
         ) : (
           <div className="subs-empty">{intl.formatMessage(subsMessages.noPurchasedYet)}</div>
         )}
+        <div className="subs-line"></div>
         <h5 className="subs-subtitle mt-10">{intl.formatMessage(subsMessages.availableProducts)}</h5>
         {renderList(available)}
 
@@ -700,11 +701,11 @@ const SubscriptionsManager = () => {
       {/* {error && <div className="subs-error">{error}</div>} */}
       {!loading && subs.length === 0 && (
         <div className="subs-card">
-          <div className="subs-card-header">
+          {/* <div className="subs-card-header">
             <button className="subs-refresh" onClick={fetchSubs}>
               {intl.formatMessage(subsMessages.refresh)}
             </button>
-          </div>
+          </div> */}
           <div className="subs-card-body">
             {renderItems({ id: "new", items: [] })}
           </div>
@@ -715,11 +716,11 @@ const SubscriptionsManager = () => {
           const st = actionStates[sub.id] || {};
           return (
             <div key={sub.id} className="subs-card">
-              <div className="subs-card-header">
+              {/* <div className="subs-card-header">
                 <button className="subs-refresh" onClick={fetchSubs}>
                   {intl.formatMessage(subsMessages.refresh)}
                 </button>
-              </div>
+              </div> */}
 
               <div className="subs-card-body">{renderItems(sub)}</div>
             </div>
@@ -1052,7 +1053,7 @@ const SubscriptionsManager = () => {
       )}
 
       <ModalDialog
-        isOpen={!!confirmOpen}
+        isOpen={!!confirmOpen && !!confirmData}
         onClose={() => {
           if (!confirmLoading) {
             setConfirmOpen(false);
@@ -1062,7 +1063,7 @@ const SubscriptionsManager = () => {
         title=""
       >
         <ModalDialog.Body>
-          {confirmData && (
+          {confirmData ? (
             <div style={{ display: "grid", gap: 12 }}>
               <div className="subs-modal-row">
                 <div className="subs-modal-title">
@@ -1120,6 +1121,8 @@ const SubscriptionsManager = () => {
                 })()}
               </div>
             </div>
+          ) : (
+            <div />
           )}
         </ModalDialog.Body>
         <ModalDialog.Footer>

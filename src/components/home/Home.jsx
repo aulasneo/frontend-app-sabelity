@@ -38,6 +38,10 @@ const Home = () => {
   const [cartQuantities, setCartQuantities] = useState({}); // { priceId: number }
   const [errorModalOpen, setErrorModalOpen] = useState(false);
   const [errorModalMessage, setErrorModalMessage] = useState("");
+  // Cancel subscription confirm/success modals
+  const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
+  const [successModalOpen, setSuccessModalOpen] = useState(false);
+  const [successModalMessage, setSuccessModalMessage] = useState("");
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -184,57 +188,49 @@ const Home = () => {
     }
   };
 
-  const handleCancelSubscription = async () => {
+  const handleCancelSubscription = () => {
     if (!currentSubscription?.id) return;
-    const confirmMsg = intl.formatMessage(
-      messages.confirmCancelSubscription || {
-        defaultMessage: "Are you sure you want to cancel your subscription?",
-      }
-    );
-    const confirmed = window.confirm(confirmMsg);
-    if (!confirmed) return;
+    setConfirmCancelOpen(true);
+  };
 
+  const performCancelSubscription = async () => {
+    if (!currentSubscription?.id) return;
     try {
       setIsCancelling(true);
-      // Cancelar al final del período de facturación para evitar interrupciones inmediatas
       const cancelAtPeriodEnd = true;
       await cancelSubscription(
         currentSubscription.id,
         cancelAtPeriodEnd,
         "User initiated cancellation from Home"
       );
-      // Refrescar suscripciones
       const allSubs = await listUserSubscriptions();
-      const activeSub =
-        allSubs && allSubs.find((sub) => sub.status === "active");
+      const activeSub = allSubs && allSubs.find((sub) => sub.status === "active");
       setCurrentSubscription(activeSub || null);
-      // Opcional: refrescar inventario
       try {
         const inventory = await getUserInventory();
         setUserInventory(inventory);
         setPlanLimit(inventory.totalCourses || 0);
-      } catch (e) {
-        // si falla, no romper la UX
-      }
-      alert(
+      } catch (e) {}
+      setSuccessModalMessage(
         intl.formatMessage(
           messages.cancelSubscriptionSuccess || {
-            defaultMessage:
-              "Your subscription cancellation has been scheduled.",
+            defaultMessage: "Your subscription cancellation has been scheduled.",
           }
         )
       );
+      setSuccessModalOpen(true);
     } catch (error) {
       console.error("Error canceling subscription:", error);
-      alert(
-        intl.formatMessage(
-          messages.cancelSubscriptionError || {
-            defaultMessage: "There was an error canceling your subscription.",
-          }
-        )
+      const msg = intl.formatMessage(
+        messages.cancelSubscriptionError || {
+          defaultMessage: "There was an error canceling your subscription.",
+        }
       );
+      setErrorModalMessage(msg);
+      setErrorModalOpen(true);
     } finally {
       setIsCancelling(false);
+      setConfirmCancelOpen(false);
     }
   };
 
@@ -348,35 +344,7 @@ const Home = () => {
               isPopular: String(product.name).trim() === "3 Courses",
             };
           })
-      : [
-          {
-            id: "basic",
-            title: messages.homeBasicTitle,
-            description: messages.homeBasicDescription,
-            price: messages.homeBasicPrice,
-            limit: 1,
-            priceId: "price_basic",
-            isPopular: false,
-          },
-          {
-            id: "standard",
-            title: messages.homeStandardTitle,
-            description: messages.homeStandardDescription,
-            price: messages.homeStandardPrice,
-            limit: 3,
-            priceId: "price_standard",
-            isPopular: true,
-          },
-          {
-            id: "premium",
-            title: messages.homePremiumTitle,
-            description: messages.homePremiumDescription,
-            price: messages.homePremiumPrice,
-            limit: 10,
-            priceId: "price_premium",
-            isPopular: false,
-          },
-        ];
+      : [];
 
   // Solo considerar currentPlan si tenemos un límite de plan válido (> 0)
   const currentPlan =
@@ -403,25 +371,25 @@ const Home = () => {
           totalItems={totalItems}
           onOpenCart={openCart}
         />
-        <div className="header-container">
-          <div>
-            <h1>{intl.formatMessage(messages.homeTitle)}</h1>
-            <h2>{intl.formatMessage(messages.homeTitle2)}</h2>
-            <h3>{intl.formatMessage(messages.homeDescription)}</h3>
+        {plans && plans.length > 0 ? (
+          <PlanCardList
+            plans={plans}
+            currentPlan={currentPlan}
+            onPlanSelect={handlePlanSelect}
+          />
+        ) : (
+          <div
+            style={{ textAlign: "center", margin: "24px 0", color: "#6b7280" }}
+          >
+            {intl.formatMessage(messages.noPlansAvailable)}
           </div>
-        </div>
-
-        <PlanCardList
-          plans={plans}
-          currentPlan={currentPlan}
-          onPlanSelect={handlePlanSelect}
-        />
+        )}
 
         {/* Cancel subscription button placed BELOW subscriptions/inventory */}
         <div className="cancel-button-suscription">
           <Button
             style={{ border: "1px solid #ccc" }}
-            variant="outline-primary"
+            variant="outline"
             onClick={handleCancelSubscription}
             disabled={
               !currentSubscription ||
@@ -491,6 +459,58 @@ const Home = () => {
         </ModalDialog.Body>
         <ModalDialog.Footer>
           <Button variant="primary" onClick={() => setErrorModalOpen(false)}>
+            {intl.formatMessage(messages.modalButtonClose)}
+          </Button>
+        </ModalDialog.Footer>
+      </ModalDialog>
+
+      {/* Confirm Cancel Subscription Modal */}
+      <ModalDialog
+        isOpen={confirmCancelOpen}
+        onClose={() => setConfirmCancelOpen(false)}
+        title={intl.formatMessage(messages.cancelSubscription || { defaultMessage: "Cancel subscription" })}
+      >
+        <ModalDialog.Body>
+          <p className="alertMinPlan">
+            {intl.formatMessage(
+              messages.confirmCancelSubscription || {
+                defaultMessage: "Are you sure you want to cancel your subscription?",
+              }
+            )}
+          </p>
+        </ModalDialog.Body>
+        <ModalDialog.Footer>
+          <Button
+            variant="outline"
+            onClick={() => setConfirmCancelOpen(false)}
+            style={{ marginRight: 12, padding: '6px 12px', fontSize: '0.9rem' }}
+          >
+            {intl.formatMessage(messages.modalButtonClose)}
+          </Button>
+          <Button
+            variant="primary"
+            onClick={performCancelSubscription}
+            disabled={isCancelling}
+            style={{ padding: '6px 12px', fontSize: '0.9rem' }}
+          >
+            {isCancelling
+              ? intl.formatMessage(messages.cancellingSubscription || { defaultMessage: "Cancelling..." })
+              : intl.formatMessage(messages.modalButtonConfirm)}
+          </Button>
+        </ModalDialog.Footer>
+      </ModalDialog>
+
+      {/* Success Modal */}
+      <ModalDialog
+        isOpen={successModalOpen}
+        onClose={() => setSuccessModalOpen(false)}
+        title={intl.formatMessage({ id: 'home.success.title', defaultMessage: 'Success' })}
+      >
+        <ModalDialog.Body>
+          <p className="alertMinPlan">{successModalMessage}</p>
+        </ModalDialog.Body>
+        <ModalDialog.Footer>
+          <Button variant="primary" onClick={() => setSuccessModalOpen(false)}>
             {intl.formatMessage(messages.modalButtonClose)}
           </Button>
         </ModalDialog.Footer>
