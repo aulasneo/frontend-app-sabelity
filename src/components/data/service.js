@@ -16,6 +16,8 @@ export const getUserData = async (username) => {
   }
 };
 
+// Nota: No existe endpoint list_invoices en el backend actual
+
 // Servicios de usuario
 
 /**

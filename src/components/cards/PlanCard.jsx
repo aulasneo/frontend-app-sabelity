@@ -32,7 +32,7 @@ const PlanCard = ({
     <div className={`plan-card ${className} ${isPopular ? 'popular' : ''}`}>
       {isPopular && (
         <div className="popular-badge">
-          {intl.formatMessage(messages.mostPopular || { defaultMessage: 'Most Popular' })}
+          {intl.formatMessage(messages.mostPopular || { id: 'planCard.mostPopular.fallback', defaultMessage: 'Most Popular' })}
         </div>
       )}
       <h2>{title}</h2>
@@ -40,12 +40,12 @@ const PlanCard = ({
       <div className="card-price-content">
         <span className="card-price">{price}</span>
         <span className="card-mouth">
-          {intl.formatMessage(messages.suscribeMouth || { defaultMessage: '/mes' })}
+          {intl.formatMessage(messages.suscribeMouth || { id: 'suscribe.month.text.fallback', defaultMessage: '/mes' })}
         </span>
       </div>
       {isDisabled ? (
         <div className="current-plan-badge">
-          {intl.formatMessage(messages.currentPlanText || { defaultMessage: 'Plan Actual' })}
+          {intl.formatMessage(messages.currentPlanText || { id: 'current.plan.text.fallback', defaultMessage: 'Plan Actual' })}
         </div>
       ) : (
         <Button

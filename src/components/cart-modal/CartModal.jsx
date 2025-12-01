@@ -20,6 +20,7 @@ const CartModal = ({
   unitsById = {},
   countsById = {},
   ownedQuantities = {},
+  cartSummary = null,
 }) => {
   const fm = (desc, fallback = "") => {
     if (!desc) return fallback;
@@ -32,6 +33,82 @@ const CartModal = ({
     const v = Number(n || 0);
     const s = Number.isInteger(v) ? String(v) : v.toFixed(2);
     return `USD $${s.replace(/\.00$/, "")}`;
+  };
+  const parseAmountLoose = (val) => {
+    if (val == null) return 0;
+    if (typeof val === 'number') return val;
+    const s = String(val);
+    const m = s.replace(',', '.').match(/([0-9]+(?:\.[0-9]+)?)/);
+    return m ? parseFloat(m[1]) : 0;
+  };
+  const extractCountFromName = (name) => {
+    const m = String(name || '').match(/(\d+)/);
+    return m ? parseInt(m[1], 10) : 0;
+  };
+  // Recalcular totales dinámicamente a partir de las props actuales
+  const computeCartTotals = () => {
+    // Base actual (lo que paga hoy) desde el footer si está disponible
+    let currentMoney = cartSummary?.currentTotal ?? null;
+    let currentCourses = cartSummary?.currentCourses ?? null;
+
+    // Si no hay resumen, calcular desde ownedQuantities
+    if (currentMoney == null || currentCourses == null) {
+      currentMoney = 0;
+      currentCourses = 0;
+      Object.keys(ownedQuantities || {}).forEach((id) => {
+        const unit = Number(unitsById[id] || 0);
+        const count = Number(countsById[id] || 0);
+        const ownedQ = Number(ownedQuantities[id] || 0);
+        currentMoney += ownedQ * unit;
+        currentCourses += ownedQ * count;
+      });
+    }
+
+    // Index de productos por id para inferencias cuando no vienen maps
+    const prodIndex = Object.fromEntries((products || []).map(p => [p.stripeId, p]));
+    const getTargetQ = (id) => {
+      const prod = prodIndex[id];
+      if (prod && prod.qty != null) return Number(prod.qty || 0);
+      return Number((cartQuantities && cartQuantities[id]) || 0);
+    };
+    const getUnit = (id) => {
+      const u = unitsById[id];
+      if (u != null && !Number.isNaN(Number(u))) return Number(u);
+      return parseAmountLoose(prodIndex[id]?.amount);
+    };
+    const getCount = (id) => {
+      const c = countsById[id];
+      if (c != null && !Number.isNaN(Number(c))) return Number(c);
+      return extractCountFromName(prodIndex[id]?.name);
+    };
+
+    // Delta respecto de owned: (targetQty - ownedQty) por cada producto
+    const allIds = new Set([
+      ...Object.keys(ownedQuantities || {}),
+      ...Object.keys(prodIndex),
+    ]);
+    let changesMoney = 0;
+    let changesCourses = 0;
+    allIds.forEach((id) => {
+      const unit = Number(getUnit(id) || 0);
+      const count = Number(getCount(id) || 0);
+      const ownedQ = Number(ownedQuantities[id] || 0);
+      const targetQ = getTargetQ(id) || ownedQ;
+      changesMoney += (targetQ - ownedQ) * unit;
+      changesCourses += (targetQ - ownedQ) * count;
+    });
+
+    const targetMoney = currentMoney + changesMoney;
+    const targetCourses = currentCourses + changesCourses;
+
+    return {
+      currentMoney,
+      targetMoney,
+      changesMoney,
+      currentCourses,
+      targetCourses,
+      changesCourses,
+    };
   };
   return (
     <ModalDialog
@@ -75,55 +152,21 @@ const CartModal = ({
             </div>
             <div className="cart-subtotal">
               <div className="cart-subtotal-label">{fm(messages.cartSubtotal, "Subtotal")}</div>
-              <div className="cart-subtotal-value">USD ${subtotal.toFixed(2)}</div>
+              {(() => {
+                const { changesMoney } = computeCartTotals();
+                return <div className="cart-subtotal-value">{fmtUSD(changesMoney)}</div>;
+              })()}
             </div>
 
             {(() => {
-              // Summary by COUNT buckets, to align owned keys and catalog keys
-              const mockPriceByCount = { 1: 69, 3: 149, 10: 199 };
-              const inferCountFromKey = (key) => {
-                const m = String(key || "").match(/(\d+)/);
-                return m ? parseInt(m[1], 10) : 0;
-              };
-              const inferUnitFromCount = (count) => mockPriceByCount[count] || 0;
-
-              // Build products map by count with target qty and unit
-              const prodByCount = {};
-              (products || []).forEach((p) => {
-                const id = p.stripeId;
-                const count = (countsById[id] != null ? countsById[id] : inferCountFromKey(id)) || 0;
-                const unit = (unitsById[id] != null ? Number(unitsById[id]) : inferUnitFromCount(count));
-                const qty = (p.qty != null ? Number(p.qty) : Number(cartQuantities[id] || 0)) || 0;
-                if (!prodByCount[count]) prodByCount[count] = { qty: 0, unit };
-                prodByCount[count].qty = qty; // one product per count expected
-                prodByCount[count].unit = unit; // keep last resolved
-              });
-
-              // Aggregate owned by count
-              const ownedByCount = {};
-              Object.keys(ownedQuantities || {}).forEach((id) => {
-                const count = (countsById[id] != null ? countsById[id] : inferCountFromKey(id)) || 0;
-                ownedByCount[count] = (ownedByCount[count] || 0) + Number(ownedQuantities[id] || 0);
-                // Make sure unit exists for this count even if not in products
-                if (!prodByCount[count]) {
-                  prodByCount[count] = { qty: 0, unit: inferUnitFromCount(count) };
-                }
-              });
-
-              let currentMoney = 0, targetMoney = 0;
-              let currentCourses = 0, targetCourses = 0;
-              Object.keys(prodByCount).forEach((k) => {
-                const count = parseInt(k, 10) || 0;
-                const unit = prodByCount[count].unit || inferUnitFromCount(count);
-                const ownedQ = Number(ownedByCount[count] || 0);
-                const targetQ = Number(prodByCount[count].qty != null ? prodByCount[count].qty : ownedQ);
-                currentMoney += ownedQ * unit;
-                targetMoney += targetQ * unit;
-                currentCourses += ownedQ * count;
-                targetCourses += targetQ * count;
-              });
-              const changesMoney = targetMoney - currentMoney;
-              const changesCourses = targetCourses - currentCourses;
+              const {
+                currentMoney,
+                targetMoney,
+                changesMoney,
+                currentCourses,
+                targetCourses,
+                changesCourses,
+              } = computeCartTotals();
               return (
                 <div style={{ display: 'grid', gap: 6, marginTop: 8 }}>
                   <div style={{ color: '#6b7280', display: 'flex', gap: 16, flexWrap: 'wrap' }}>

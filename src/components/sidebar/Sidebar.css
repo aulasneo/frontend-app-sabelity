@@ -1,5 +1,4 @@
 .app-content {
-  padding: 24px 24px 32px;
   overflow-x: hidden; /* evita scroll horizontal cuando hay grids anchos */
 }
 .app-layout {

@@ -35,6 +35,7 @@ const Home = () => {
   const [currentSubscription, setCurrentSubscription] = useState(null);
   const [isCancelling, setIsCancelling] = useState(false);
   const [showCart, setShowCart] = useState(false);
+  const [cartSummary, setCartSummary] = useState(null);
   const [cartQuantities, setCartQuantities] = useState({}); // { priceId: number }
   const [errorModalOpen, setErrorModalOpen] = useState(false);
   const [errorModalMessage, setErrorModalMessage] = useState("");
@@ -119,7 +120,34 @@ const Home = () => {
   }, [user?.username]);
 
   // Shopping cart helpers
-  const openCart = () => setShowCart(true);
+  const openCart = () => {
+    // Construir un resumen base usando el plan actual (si existe)
+    try {
+      const currentCoursesBase = Number(planLimit) || 0;
+      // Resolver precio del plan actual buscando por cantidad en el nombre del producto
+      const match = (products || []).find((p) => {
+        const n = parseInt(String(p?.name || ''), 10) || 0;
+        return n === currentCoursesBase;
+      });
+      const currentTotalBase = match ? (function () {
+        // Extraer número de amount (puede ser "149.00 USD" u otros formatos)
+        const s = String(match.amount || '');
+        const m = s.match(/([0-9]+(?:\.[0-9]+)?)/);
+        return m ? parseFloat(m[1]) : 0;
+      })() : 0;
+      setCartSummary({
+        currentTotal: currentTotalBase,
+        currentCourses: currentCoursesBase,
+        purchasesSubtotal: 0,
+        purchasesCourses: 0,
+        updatesDelta: 0,
+        updatesDeltaCourses: 0,
+        newTotal: currentTotalBase,
+        newCourses: currentCoursesBase,
+      });
+    } catch {}
+    setShowCart(true);
+  };
   const closeCart = () => setShowCart(false);
   const setQty = (priceId, qty) => {
     const q = Math.max(0, parseInt(qty || 0, 10));
@@ -154,7 +182,7 @@ const Home = () => {
       if (!items.length) {
         alert(
           intl.formatMessage(
-            messages.cartEmpty || { defaultMessage: "Your cart is empty." }
+            messages.cartEmpty || { id: 'home.cart.empty.fallback', defaultMessage: "Your cart is empty." }
           )
         );
         return;
@@ -170,6 +198,7 @@ const Home = () => {
       } else {
         const msg = intl.formatMessage(
           messages.checkoutNoUrl || {
+            id: 'home.cart.checkout.no.url.fallback',
             defaultMessage: "Checkout created but no URL was returned.",
           }
         );
@@ -180,6 +209,7 @@ const Home = () => {
       console.error("Error in cart checkout:", error);
       const msg = intl.formatMessage(
         messages.cartCheckoutError || {
+          id: 'home.cart.checkout.error.fallback',
           defaultMessage: "There was an error initiating the checkout.",
         }
       );
@@ -214,6 +244,7 @@ const Home = () => {
       setSuccessModalMessage(
         intl.formatMessage(
           messages.cancelSubscriptionSuccess || {
+            id: 'home.cancel.subscription.success.fallback',
             defaultMessage: "Your subscription cancellation has been scheduled.",
           }
         )
@@ -223,6 +254,7 @@ const Home = () => {
       console.error("Error canceling subscription:", error);
       const msg = intl.formatMessage(
         messages.cancelSubscriptionError || {
+          id: 'home.cancel.subscription.error.fallback',
           defaultMessage: "There was an error canceling your subscription.",
         }
       );
@@ -400,11 +432,13 @@ const Home = () => {
             {isCancelling
               ? intl.formatMessage(
                   messages.cancellingSubscription || {
+                    id: 'home.cancelling.subscription.fallback',
                     defaultMessage: "Cancelling...",
                   }
                 )
               : intl.formatMessage(
                   messages.cancelSubscription || {
+                    id: 'home.cancel.subscription.fallback',
                     defaultMessage: "Cancel subscription",
                   }
                 )}
@@ -451,7 +485,7 @@ const Home = () => {
         isOpen={errorModalOpen}
         onClose={() => setErrorModalOpen(false)}
         title={intl.formatMessage(
-          messages.errorTitle || { defaultMessage: "Error" }
+          messages.errorTitle || { id: 'home.error.title.fallback', defaultMessage: "Error" }
         )}
       >
         <ModalDialog.Body>
@@ -468,12 +502,13 @@ const Home = () => {
       <ModalDialog
         isOpen={confirmCancelOpen}
         onClose={() => setConfirmCancelOpen(false)}
-        title={intl.formatMessage(messages.cancelSubscription || { defaultMessage: "Cancel subscription" })}
+        title={intl.formatMessage(messages.cancelSubscription || { id: 'home.cancel.subscription.title.fallback', defaultMessage: "Cancel subscription" })}
       >
         <ModalDialog.Body>
           <p className="alertMinPlan">
             {intl.formatMessage(
               messages.confirmCancelSubscription || {
+                id: 'home.confirm.cancel.subscription.fallback',
                 defaultMessage: "Are you sure you want to cancel your subscription?",
               }
             )}
@@ -494,7 +529,7 @@ const Home = () => {
             style={{ padding: '6px 12px', fontSize: '0.9rem' }}
           >
             {isCancelling
-              ? intl.formatMessage(messages.cancellingSubscription || { defaultMessage: "Cancelling..." })
+              ? intl.formatMessage(messages.cancellingSubscription || { id: 'home.cancelling.subscription.fallback', defaultMessage: "Cancelling..." })
               : intl.formatMessage(messages.modalButtonConfirm)}
           </Button>
         </ModalDialog.Footer>
@@ -529,6 +564,7 @@ const Home = () => {
         totalItems={totalItems}
         subtotal={subtotal}
         onCheckout={handleCartCheckout}
+        cartSummary={cartSummary}
       />
     </>
   );

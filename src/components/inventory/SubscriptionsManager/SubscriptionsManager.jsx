@@ -5,6 +5,7 @@ import {
   addOrUpdateProduct,
   listProducts,
   createCheckoutWithMultipleItems,
+  getUserSubscription,
 } from "../../data/service";
 import { ModalDialog } from "@openedx/paragon";
 import "./SubscriptionsManager.css";
@@ -50,6 +51,7 @@ const SubscriptionsManager = () => {
   const [editQuantities, setEditQuantities] = useState({}); // { [subId]: { [priceId]: newTotalQty } }
   const [showCart, setShowCart] = useState(false);
   const [currentCartSub, setCurrentCartSub] = useState(null);
+  const [cartSummary, setCartSummary] = useState(null); // Totales calculados del footer para pasar al modal
 
   const fetchSubs = async () => {
     try {
@@ -61,7 +63,33 @@ const SubscriptionsManager = () => {
         setSubs(MOCK_SUBS);
       } else {
         const data = await listUserSubscriptions();
-        setSubs(Array.isArray(data) ? data : []);
+        const list = Array.isArray(data) ? data : [];
+        // Si no vienen items, intentamos enriquecer cada sub con getUserSubscription
+        const enriched = await Promise.all(
+          list.map(async (sub) => {
+            try {
+              const hasItems =
+                Array.isArray(sub?.items?.data) && sub.items.data.length > 0;
+              if (hasItems) return sub;
+              const detailed = await getUserSubscription(sub.id);
+              // Backend alternativo devuelve detailed.products (no Stripe items)
+              if (detailed && (detailed.items?.data?.length || 0) > 0) {
+                return { ...sub, items: detailed.items };
+              }
+              if (
+                detailed &&
+                Array.isArray(detailed.products) &&
+                detailed.products.length > 0
+              ) {
+                return { ...sub, products: detailed.products };
+              }
+              return sub;
+            } catch (e) {
+              return sub;
+            }
+          })
+        );
+        setSubs(enriched);
       }
       // Al refrescar, limpiar estados y cantidades de compra
       setActionStates({});
@@ -113,24 +141,60 @@ const SubscriptionsManager = () => {
     const initial = {};
     const initialEdit = {};
     subs.forEach((sub) => {
-      const items = sub?.items || sub?.products || sub?.lines || [];
+      // Soportar tanto items.data (Stripe) como items directo
+      let items = [];
+      if (sub?.items?.data && Array.isArray(sub.items.data)) {
+        items = sub.items.data;
+      } else if (Array.isArray(sub?.items)) {
+        items = sub.items;
+      } else if (Array.isArray(sub?.products)) {
+        items = sub.products;
+      } else if (Array.isArray(sub?.lines)) {
+        items = sub.lines;
+      }
+
       initial[sub.id] = {};
       initialEdit[sub.id] = {};
-      items.forEach((it) => {
-        const pid =
+      items.forEach((it, idx) => {
+        // Stripe items: it.price.id, it.quantity
+        // Fallback: priceId, price_id, plan_type, stripeId, id
+        let pid =
+          it?.price?.id ||
           it?.priceId ||
           it?.price_id ||
           it?.plan_type ||
           it?.stripeId ||
           it?.id;
-        const q = it?.quantity ?? it?.qty ?? it?.count ?? 0;
+        let q = it?.quantity ?? it?.qty ?? it?.count;
+
+        // Si viene del backend como 'products' con coursesCount y sin priceId, resolvemos por nombre usando productsList
+        if (!pid && typeof it?.coursesCount === "number") {
+          const name =
+            it.coursesCount === 1 ? "1 Course" : `${it.coursesCount} Courses`;
+          const match = (productsList || []).find(
+            (p) => (p?.name || "").trim().toLowerCase() === name.toLowerCase()
+          );
+          if (match) {
+            pid = match.stripeId || match.priceId || match.id;
+          }
+          // cantidad por defecto 1 si no provee
+          if (q == null) q = 1;
+        }
+        if (q == null) q = 0;
+
         if (pid) {
           const n = Number(q) || 0;
           initial[sub.id][pid] = n;
           initialEdit[sub.id][pid] = n;
+        } else {
+          console.warn(
+            "[SubscriptionsManager] Could not extract priceId from item:",
+            it
+          );
         }
       });
     });
+
     setQuantities((prev) => ({ ...initial }));
     setEditQuantities(initialEdit);
     // resetear purchase quantities (no queremos prefijar con lo adquirido)
@@ -417,16 +481,157 @@ const SubscriptionsManager = () => {
       return map;
     })();
 
+    // Helper local para resolver precio unitario antes de renderList
+    const parseAmountToNumberEarly = (val) => {
+      if (val == null) return 0;
+      if (typeof val === "number") return val;
+      const s = String(val);
+      const m = s.replace(",", ".").match(/([0-9]+(?:\.[0-9]+)?)/);
+      return m ? parseFloat(m[1]) : 0;
+    };
+    const resolveUnitPrice = (priceId) => {
+      // 0) si ya lo tenemos precalculado (incluye tabla MOCK 1/3/10), usarlo
+      if (unitsMap[priceId] != null) {
+        return unitsMap[priceId];
+      }
+
+      // 1) directo por priceId en productsMap
+      const metaById = productsMap[priceId];
+      if (metaById) {
+        const u = parseAmountToNumberEarly(metaById.amount);
+        if (u) {
+          return u;
+        }
+      }
+
+      // 2) por coincidencia en allProds
+      const maybe = (allProds || []).find(
+        (p) => (p?.stripeId || p?.priceId || p?.id) === priceId
+      );
+      if (maybe) {
+        const u = parseAmountToNumberEarly(maybe.amount);
+        if (u) return u;
+      }
+
+      // 3) Buscar en sub.products por priceId para obtener coursesCount y matchear por nombre
+      let coursesCountFromBackend = 0;
+      try {
+        const arr2 = Array.isArray(sub?.products) ? sub.products : [];
+        const backendItem = arr2.find(
+          (it) => (it?.priceId || it?.id) === priceId
+        );
+        if (backendItem && typeof backendItem.coursesCount === "number") {
+          coursesCountFromBackend = backendItem.coursesCount;
+        }
+      } catch {}
+
+      // 4) Si tenemos coursesCount del backend, buscar por nombre "N Courses" en catálogo
+      if (coursesCountFromBackend > 0) {
+        const label =
+          coursesCountFromBackend === 1
+            ? "1 Course"
+            : `${coursesCountFromBackend} Courses`;
+        const match = (allProds || []).find(
+          (p) => (p?.name || "").trim().toLowerCase() === label.toLowerCase()
+        );
+        if (match) {
+          const u = parseAmountToNumberEarly(match.amount);
+          if (u) return u;
+        }
+      }
+
+      // 5) por nombre asociado al id
+      const nm = productsMap[priceId]?.name || maybe?.name || String(priceId);
+      const metaByName = findMeta(null, nm) || {};
+      const txt = getAmountText(metaByName);
+      const uTxt = getPriceNumber(txt);
+      if (uTxt) {
+        return uTxt;
+      }
+
+      // 6) buscar por nombre exacto en catálogo
+      const byName = (allProds || []).find(
+        (p) => (p?.name || "").trim() === nm.trim()
+      );
+      if (byName) {
+        const u = parseAmountToNumberEarly(byName.amount);
+        if (u) {
+          return u;
+        }
+      }
+
+      // 7) fallback por cantidad N en nombre
+      const extractCount = (s) => {
+        const m = String(s || "").match(/(\d+)/);
+        return m ? parseInt(m[1], 10) : 0;
+      };
+      const cnt = extractCount(nm);
+      if (cnt) {
+        const label = cnt === 1 ? "1 Course" : `${cnt} Courses`;
+        const match = (allProds || []).find(
+          (p) => (p?.name || "").trim().toLowerCase() === label.toLowerCase()
+        );
+        if (match) {
+          const u = parseAmountToNumberEarly(match.amount);
+          if (u) return u;
+        }
+        // En modo MOCK, aplicar tabla por conteo
+        if (MOCK_MODE) {
+          const table = { 1: 69, 3: 149, 10: 199 };
+          if (table[cnt]) {
+            return table[cnt];
+          }
+        }
+      }
+      console.warn(
+        "[resolveUnitPrice] No se pudo resolver precio para:",
+        priceId
+      );
+      return 0;
+    };
+
     const renderList = (list) => (
       <ul className="subs-items">
         {list.map((p) => {
           const priceId = p.stripeId || p.priceId || p.id;
           const meta = findMeta(priceId, p.name) || { name: p.name };
           const qty = Number(subQty[priceId] || 0);
+          // Fallback: si qty aún es 0, intentar leer de backend detailed.products
+          const backendQty = (() => {
+            try {
+              // Buscar en items.data
+              const arr1 = Array.isArray(sub?.items?.data)
+                ? sub.items.data
+                : [];
+              const hit1 = arr1.find(
+                (it) => (it?.price?.id || it?.priceId) === priceId
+              );
+              if (hit1 && hit1.quantity != null)
+                return Number(hit1.quantity) || 0;
+              // Buscar en products (backend alterno)
+              const arr2 = Array.isArray(sub?.products) ? sub.products : [];
+              const hit2 = arr2.find(
+                (it) =>
+                  (it?.priceId || it?.id) === priceId ||
+                  (it?.name && meta?.name === it.name)
+              );
+              if (hit2 && hit2.quantity != null)
+                return Number(hit2.quantity) || 0;
+            } catch {}
+            return 0;
+          })();
+          const displayOwnedQty = qty > 0 ? qty : backendQty;
           const baseTitle = meta?.name || p.name || priceId;
           const isAcquired = purchasedSet.has(priceId);
           const title = baseTitle;
-          const priceText = getAmountText(meta);
+          const priceTextRaw = getAmountText(meta);
+          const unitForDisplay = resolveUnitPrice(priceId);
+          const priceText =
+            priceTextRaw && getPriceNumber(priceTextRaw)
+              ? priceTextRaw
+              : unitForDisplay
+              ? `USD $${unitForDisplay}`
+              : "";
 
           const setQty = (newQty) => {
             const valNum = Math.max(0, Number(newQty) || 0);
@@ -476,15 +681,17 @@ const SubscriptionsManager = () => {
 
           const st =
             (actionStates[sub.id] && actionStates[sub.id][priceId]) || {};
+          // Prefill selector con la cantidad poseída (packs) usando displayOwnedQty
+          const ownedBase = displayOwnedQty > 0 ? displayOwnedQty : qty;
           const val = isAcquired
-            ? Number((editQuantities[sub.id] || {})[priceId] ?? qty)
+            ? Number((editQuantities[sub.id] || {})[priceId] ?? ownedBase)
             : Number((purchaseQuantities[sub.id] || {})[priceId] || 0);
 
           return (
             <li key={priceId} className="subs-item">
               <div className="subs-item-line">
                 <span className="subs-item-amount">
-                  {isAcquired && qty > 0 ? qty : ""}
+                  {displayOwnedQty > 0 ? displayOwnedQty : ""}
                 </span>
                 <span className="subs-item-title">{title}</span>
                 {priceText && (
@@ -520,7 +727,9 @@ const SubscriptionsManager = () => {
 
     return (
       <>
-        <h5 className="subs-subtitle">{intl.formatMessage(subsMessages.yourProducts)}</h5>
+        <h5 className="subs-subtitle">
+          {intl.formatMessage(subsMessages.yourProducts)}
+        </h5>
         <div className="subs-items-header">
           <div>{intl.formatMessage(subsMessages.tableSubscriptions)}</div>
           <div>{intl.formatMessage(subsMessages.tablePlan)}</div>
@@ -530,10 +739,14 @@ const SubscriptionsManager = () => {
         {acquired.length ? (
           renderList(acquired)
         ) : (
-          <div className="subs-empty">{intl.formatMessage(subsMessages.noPurchasedYet)}</div>
+          <div className="subs-empty">
+            {intl.formatMessage(subsMessages.noPurchasedYet)}
+          </div>
         )}
         <div className="subs-line"></div>
-        <h5 className="subs-subtitle mt-10">{intl.formatMessage(subsMessages.availableProducts)}</h5>
+        <h5 className="subs-subtitle mt-10">
+          {intl.formatMessage(subsMessages.availableProducts)}
+        </h5>
         {renderList(available)}
 
         {(() => {
@@ -543,7 +756,7 @@ const SubscriptionsManager = () => {
           const edits = editQuantities[subId] || {};
           const owned = quantities[subId] || {};
 
-          // Resolver de precio unitario por priceId apoyado en el catálogo en memoria
+          // Resolver de precio unitario por priceId apoyado en el catálogo en memoria (productsMap/productsList)
           const idToName = (() => {
             const map = {};
             (allProds || []).forEach((p) => {
@@ -552,26 +765,9 @@ const SubscriptionsManager = () => {
             });
             return map;
           })();
-          // Fallback tabla para MOCK: precios conocidos por cantidad del nombre
-          const mockPriceByCount = MOCK_MODE ? { 1: 69, 3: 149, 10: 199 } : {};
-          const resolveMockUnit = (nm) => {
-            const s = String(nm || "");
-            const m = s.match(/(\d+)/);
-            const n = m ? parseInt(m[1], 10) : 0;
-            return mockPriceByCount[n] || 0;
-          };
           const getUnit = (priceId) => {
-            if (unitsMap[priceId] != null) return unitsMap[priceId];
-            const nm = idToName[priceId] || String(priceId);
-            const meta = findMeta(priceId, nm) || {};
-            const txt = getAmountText(meta);
-            const u = getPriceNumber(txt);
-            if (u) return u;
-            // fallback MOCK por nombre
-            let byName = resolveMockUnit(nm);
-            if (byName) return byName;
-            // intentar por priceId si contiene números (p.ej., price_3courses)
-            return resolveMockUnit(String(priceId));
+            // Usar el mismo resolver que en renderList para consistencia
+            return resolveUnitPrice(priceId);
           };
 
           // Current total (what the user is paying now)
@@ -617,6 +813,17 @@ const SubscriptionsManager = () => {
           const onReview = async () => {
             if (hasPurchases || hasUpdates) {
               setCurrentCartSub(subId);
+              // Guardar los totales calculados para pasarlos al modal
+              setCartSummary({
+                currentTotal,
+                currentCourses,
+                purchasesSubtotal,
+                purchasesCourses,
+                updatesDelta,
+                updatesDeltaCourses,
+                newTotal,
+                newCourses,
+              });
               setShowCart(true);
             }
           };
@@ -625,25 +832,55 @@ const SubscriptionsManager = () => {
             `USD $${(Math.round(n * 100) / 100)
               .toString()
               .replace(/\.00$/, "")}`;
-          const countOf = (priceId) => {
-            const nm = idToName[priceId] || String(priceId);
-            const m = String(nm).match(/(\d+)/);
+          // Resolución robusta de cursos por pack
+          const extractCount = (s) => {
+            const m = String(s || "").match(/(\d+)/);
             return m ? parseInt(m[1], 10) : 0;
+          };
+          const nameToCountMap = (() => {
+            const m = {};
+            (allProds || []).forEach((p) => {
+              const n = extractCount(p?.name);
+              const id = p?.stripeId || p?.priceId || p?.id;
+              if (id && n) m[id] = n;
+            });
+            return m;
+          })();
+          const courseCount = (priceId) => {
+            if (nameToCountMap[priceId]) return nameToCountMap[priceId];
+            // Fallback: intentar deducir desde backend sub.products por priceId o nombre
+            try {
+              const arr2 = Array.isArray(sub?.products) ? sub.products : [];
+              const byId = arr2.find(
+                (it) => (it?.priceId || it?.id) === priceId
+              );
+              if (byId && typeof byId.coursesCount === "number")
+                return byId.coursesCount;
+              const nmMeta = idToName[priceId] || String(priceId);
+              const byName = arr2.find(
+                (it) => (it?.name || "").trim() === (nmMeta || "").trim()
+              );
+              if (byName && typeof byName.coursesCount === "number")
+                return byName.coursesCount;
+            } catch {}
+            const nm = idToName[priceId] || String(priceId);
+            const n = extractCount(nm);
+            return n || 0;
           };
           // Courses counts
           let currentCourses = 0;
           Object.entries(owned).forEach(([priceId, qty]) => {
-            currentCourses += (Number(qty) || 0) * countOf(priceId);
+            currentCourses += (Number(qty) || 0) * courseCount(priceId);
           });
           let purchasesCourses = 0;
           Object.entries(purch).forEach(([priceId, qty]) => {
-            purchasesCourses += (Number(qty) || 0) * countOf(priceId);
+            purchasesCourses += (Number(qty) || 0) * courseCount(priceId);
           });
           let updatesDeltaCourses = 0;
           allIds.forEach((priceId) => {
             const from = Number(owned[priceId] || 0);
             const to = Number(edits[priceId] != null ? edits[priceId] : from);
-            updatesDeltaCourses += (to - from) * countOf(priceId);
+            updatesDeltaCourses += (to - from) * courseCount(priceId);
           });
           const newCourses =
             currentCourses + purchasesCourses + updatesDeltaCourses;
@@ -653,7 +890,8 @@ const SubscriptionsManager = () => {
             <div className="subs-summary">
               <div className="subs-summary-row subs-summary-courses">
                 <span>
-                  {intl.formatMessage(subsMessages.summaryCurrentCourses)}: <strong>{currentCourses}</strong>
+                  {intl.formatMessage(subsMessages.summaryCurrentCourses)}:{" "}
+                  <strong>{currentCourses}</strong>
                 </span>
                 <span>
                   {intl.formatMessage(subsMessages.summaryChanges)}:{" "}
@@ -663,20 +901,23 @@ const SubscriptionsManager = () => {
                   </strong>
                 </span>
                 <span>
-                  {intl.formatMessage(subsMessages.summaryNewCourses)}: <strong>{newCourses}</strong>
+                  {intl.formatMessage(subsMessages.summaryNewCourses)}:{" "}
+                  <strong>{newCourses}</strong>
                 </span>
               </div>
               <div className="subs-summary-row subs-summary-money-row">
                 <div className="subs-summary-money">
                   <span>
-                    {intl.formatMessage(subsMessages.summaryCurrentTotal)}: <strong>{fmt(currentTotal)}</strong>
+                    {intl.formatMessage(subsMessages.summaryCurrentTotal)}:{" "}
+                    <strong>{fmt(currentTotal)}</strong>
                   </span>
                   <span>
                     {intl.formatMessage(subsMessages.summaryChanges)}:{" "}
                     <strong>{fmt(purchasesSubtotal + updatesDelta)}</strong>
                   </span>
                   <span>
-                    {intl.formatMessage(subsMessages.summaryNewTotal)}: <strong>{fmt(newTotal)}</strong>
+                    {intl.formatMessage(subsMessages.summaryNewTotal)}:{" "}
+                    <strong>{fmt(newTotal)}</strong>
                   </span>
                 </div>
                 <button
@@ -696,8 +937,14 @@ const SubscriptionsManager = () => {
 
   return (
     <div className="subs-manager">
-      <h4 className="subs-title">{intl.formatMessage(subsMessages.mySubscriptions)}</h4>
-      {loading && <div className="subs-loading">{intl.formatMessage(subsMessages.loading)}</div>}
+      <h4 className="subs-title">
+        {intl.formatMessage(subsMessages.mySubscriptions)}
+      </h4>
+      {loading && (
+        <div className="subs-loading">
+          {intl.formatMessage(subsMessages.loading)}
+        </div>
+      )}
       {/* {error && <div className="subs-error">{error}</div>} */}
       {!loading && subs.length === 0 && (
         <div className="subs-card">
@@ -741,6 +988,7 @@ const SubscriptionsManager = () => {
             checkoutButton: { defaultMessage: "Checkout" },
             modalButtonClose: { defaultMessage: "Cancel" },
           }}
+          cartSummary={cartSummary}
           products={(function () {
             // Build full catalog list (like Pricing Plans cart), not just qty>0
             const catalog = (
@@ -758,21 +1006,84 @@ const SubscriptionsManager = () => {
               return na - nb;
             });
 
-            const mockPriceByCount = MOCK_MODE
-              ? { 1: 69, 3: 149, 10: 199 }
-              : {};
             const getId = (p) => p?.stripeId || p?.priceId || p?.id;
-            const resolveUnit = (priceId, name) => {
-              const meta = findMeta(priceId, name) || {};
-              const u = getPriceNumber(getAmountText(meta));
-              if (u) return u;
-              const m = String(name || priceId || "").match(/(\d+)/);
-              const n = m ? parseInt(m[1], 10) : 0;
-              return mockPriceByCount[n] || 0;
+
+            // Helper local para parsear amount
+            const parseAmountLocal = (val) => {
+              if (val == null) return 0;
+              if (typeof val === "number") return val;
+              const s = String(val);
+              const m = s.replace(",", ".").match(/([0-9]+(?:\.[0-9]+)?)/);
+              return m ? parseFloat(m[1]) : 0;
             };
-            const countOf = (nameOrId) => {
-              const m = String(nameOrId || "").match(/(\d+)/);
-              return m ? parseInt(m[1], 10) : 0;
+
+            // Resolver precio unitario (replica de resolveUnitPrice)
+            const resolveUnit = (priceId) => {
+              // 1) productsMap
+              const metaById = productsMap[priceId];
+              if (metaById) {
+                const u = parseAmountLocal(metaById.amount);
+                if (u) return u;
+              }
+              // 2) productsList por ID
+              const maybe = (productsList || []).find(
+                (p) => (p?.stripeId || p?.priceId || p?.id) === priceId
+              );
+              if (maybe) {
+                const u = parseAmountLocal(maybe.amount);
+                if (u) return u;
+              }
+              // 3) desde sub.products por coursesCount
+              try {
+                const arr2 = Array.isArray(sub?.products) ? sub.products : [];
+                const backendItem = arr2.find(
+                  (it) => (it?.priceId || it?.id) === priceId
+                );
+                if (
+                  backendItem &&
+                  typeof backendItem.coursesCount === "number"
+                ) {
+                  const label =
+                    backendItem.coursesCount === 1
+                      ? "1 Course"
+                      : `${backendItem.coursesCount} Courses`;
+                  const match = (productsList || []).find(
+                    (p) =>
+                      (p?.name || "").trim().toLowerCase() ===
+                      label.toLowerCase()
+                  );
+                  if (match) {
+                    const u = parseAmountLocal(match.amount);
+                    if (u) return u;
+                  }
+                }
+              } catch {}
+              return 0;
+            };
+
+            const countOf = (priceId) => {
+              // Intentar desde sub.products primero
+              try {
+                const arr2 = Array.isArray(sub?.products) ? sub.products : [];
+                const backendItem = arr2.find(
+                  (it) => (it?.priceId || it?.id) === priceId
+                );
+                if (
+                  backendItem &&
+                  typeof backendItem.coursesCount === "number"
+                ) {
+                  return backendItem.coursesCount;
+                }
+              } catch {}
+              // Fallback: extraer del nombre del producto en catálogo
+              const prod = productsList.find(
+                (p) => (p?.stripeId || p?.priceId || p?.id) === priceId
+              );
+              if (prod?.name) {
+                const m = String(prod.name).match(/(\d+)/);
+                if (m) return parseInt(m[1], 10);
+              }
+              return 0;
             };
             const fmt = (n) => {
               const v = Number(n || 0);
@@ -784,45 +1095,79 @@ const SubscriptionsManager = () => {
             const owned = quantities[subId] || {};
             const edits = editQuantities[subId] || {};
             const purch = purchaseQuantities[subId] || {};
-            const idCount = (s) => { const m = String(s||'').match(/(\d+)/); return m ? parseInt(m[1],10) : 0; };
+            const idCount = (s) => {
+              const m = String(s || "").match(/(\d+)/);
+              return m ? parseInt(m[1], 10) : 0;
+            };
             // Construir índice por cantidad de cursos para owned y edits
-            const ownedByCount = (()=>{
+            const ownedByCount = (() => {
               const map = {};
-              Object.keys(owned).forEach((k)=>{ const c = idCount(k); if (c) map[c] = k; });
+              Object.keys(owned).forEach((k) => {
+                const c = idCount(k);
+                if (c) map[c] = k;
+              });
               return map;
             })();
-            const editsByCount = (()=>{
+            const editsByCount = (() => {
               const map = {};
-              Object.keys(edits).forEach((k)=>{ const c = idCount(k); if (c) map[c] = k; });
+              Object.keys(edits).forEach((k) => {
+                const c = idCount(k);
+                if (c) map[c] = k;
+              });
               return map;
             })();
-            const purchByCount = (()=>{
+            const purchByCount = (() => {
               const map = {};
-              Object.keys(purch).forEach((k)=>{ const c = idCount(k); if (c) map[c] = k; });
+              Object.keys(purch).forEach((k) => {
+                const c = idCount(k);
+                if (c) map[c] = k;
+              });
               return map;
             })();
             // build rows with combined qty = (edits or owned) for acquired items, or purchase qty for new ones
             return catalog.map((p) => {
               const id = getId(p);
               const name = p?.name || productsMap[id]?.name || id;
-              const unit = resolveUnit(id, name);
-              const c = countOf(name) || countOf(id);
-              const ownedKey = Object.prototype.hasOwnProperty.call(owned, id) ? id : (Object.keys(owned).find(k => countOf(k) === c) || null);
-              const editKey = (edits[id] != null ? id : (Object.keys(edits).find(k => countOf(k) === c) || null));
-              const purchKey = (purch[id] != null ? id : (Object.keys(purch).find(k => countOf(k) === c) || null));
+              const unit = resolveUnit(id);
+              const c = countOf(id);
+              const ownedKey = Object.prototype.hasOwnProperty.call(owned, id)
+                ? id
+                : Object.keys(owned).find((k) => countOf(k) === c) || null;
+              const editKey =
+                edits[id] != null
+                  ? id
+                  : Object.keys(edits).find((k) => countOf(k) === c) || null;
+              const purchKey =
+                purch[id] != null
+                  ? id
+                  : Object.keys(purch).find((k) => countOf(k) === c) || null;
               const ownedQty = Number((ownedKey ? owned[ownedKey] : 0) || 0);
-              const editQty = (editKey != null && edits[editKey] != null) ? Number(edits[editKey]) : undefined;
-              const newQtyForNew = (purchKey != null && purch[purchKey] != null) ? Number(purch[purchKey]) : 0;
+              const editQty =
+                editKey != null && edits[editKey] != null
+                  ? Number(edits[editKey])
+                  : undefined;
+              const newQtyForNew =
+                purchKey != null && purch[purchKey] != null
+                  ? Number(purch[purchKey])
+                  : 0;
               const isOwned = !!ownedKey && ownedQty > 0;
-              const qty = Number(editQty != null ? editQty : (isOwned ? ownedQty : newQtyForNew));
+              const qty = Number(
+                editQty != null ? editQty : isOwned ? ownedQty : newQtyForNew
+              );
               const setQtyHandler = (priceId, newVal) => {
                 const v = Math.max(0, Number(newVal) || 0);
                 if (isOwned) {
                   const targetKey = editKey || ownedKey || priceId;
-                  setEditQuantities((prev) => ({ ...prev, [subId]: { ...(prev[subId] || {}), [targetKey]: v } }));
+                  setEditQuantities((prev) => ({
+                    ...prev,
+                    [subId]: { ...(prev[subId] || {}), [targetKey]: v },
+                  }));
                 } else {
                   const targetKey = purchKey || priceId;
-                  setPurchaseQuantities((prev) => ({ ...prev, [subId]: { ...(prev[subId] || {}), [targetKey]: v } }));
+                  setPurchaseQuantities((prev) => ({
+                    ...prev,
+                    [subId]: { ...(prev[subId] || {}), [targetKey]: v },
+                  }));
                 }
               };
               const incHandler = (priceId) => setQtyHandler(priceId, qty + 1);
@@ -894,7 +1239,7 @@ const SubscriptionsManager = () => {
               const meta = findMeta(priceId, name) || {};
               const u = getPriceNumber(getAmountText(meta));
               if (u) return u;
-              const m = String(name || priceId || '').match(/(\d+)/);
+              const m = String(name || priceId || "").match(/(\d+)/);
               const n = m ? parseInt(m[1], 10) : 0;
               return mockPriceByCount[n] || 0;
             };
@@ -902,18 +1247,32 @@ const SubscriptionsManager = () => {
             const catalog =
               productsList && productsList.length
                 ? productsList
-                : Object.keys(productsMap).map((id) => ({ stripeId: id, name: productsMap[id]?.name }));
+                : Object.keys(productsMap).map((id) => ({
+                    stripeId: id,
+                    name: productsMap[id]?.name,
+                  }));
             catalog.forEach((p) => {
               const id = getId(p);
               const name = p?.name || productsMap[id]?.name || id;
               const unit = resolveUnit(id, name) || 0;
-              const c = (String(name||id).match(/(\d+)/) || [0,0])[1] | 0;
-              const findByCount = (obj) => { const key = Object.keys(obj).find(k => (String(k).match(/(\d+)/)||[0,0])[1] == c); return key ? obj[key] : undefined; };
-              const ownedQtyRaw = (owned[id] != null ? owned[id] : findByCount(owned));
+              const c = (String(name || id).match(/(\d+)/) || [0, 0])[1] | 0;
+              const findByCount = (obj) => {
+                const key = Object.keys(obj).find(
+                  (k) => (String(k).match(/(\d+)/) || [0, 0])[1] == c
+                );
+                return key ? obj[key] : undefined;
+              };
+              const ownedQtyRaw =
+                owned[id] != null ? owned[id] : findByCount(owned);
               const ownedQty = Number(ownedQtyRaw || 0);
-              const editQtyRaw = (edits[id] != null ? edits[id] : findByCount(edits));
-              const purchQtyRaw = (purch[id] != null ? purch[id] : findByCount(purch));
-              const targetQty = ownedQty > 0 ? Number(editQtyRaw != null ? editQtyRaw : ownedQty) : Number(purchQtyRaw || 0);
+              const editQtyRaw =
+                edits[id] != null ? edits[id] : findByCount(edits);
+              const purchQtyRaw =
+                purch[id] != null ? purch[id] : findByCount(purch);
+              const targetQty =
+                ownedQty > 0
+                  ? Number(editQtyRaw != null ? editQtyRaw : ownedQty)
+                  : Number(purchQtyRaw || 0);
               delta += (targetQty - ownedQty) * unit;
             });
             return delta;
@@ -923,7 +1282,6 @@ const SubscriptionsManager = () => {
             return quantities[subId] || {};
           })()}
           unitsById={(function () {
-            const subId = currentCartSub;
             const map = {};
             const all =
               productsList && productsList.length
@@ -932,20 +1290,62 @@ const SubscriptionsManager = () => {
                     stripeId: id,
                     name: productsMap[id]?.name,
                   }));
-            const mockPriceByCount = MOCK_MODE
-              ? { 1: 69, 3: 149, 10: 199 }
-              : {};
+
+            // Helper local para resolver precio
+            const parseAmountLocal = (val) => {
+              if (val == null) return 0;
+              if (typeof val === "number") return val;
+              const s = String(val);
+              const m = s.replace(",", ".").match(/([0-9]+(?:\.[0-9]+)?)/);
+              return m ? parseFloat(m[1]) : 0;
+            };
+
+            const resolvePrice = (priceId) => {
+              // 1) productsMap
+              const metaById = productsMap[priceId];
+              if (metaById) {
+                const u = parseAmountLocal(metaById.amount);
+                if (u) return u;
+              }
+              // 2) productsList por ID
+              const maybe = (productsList || []).find(
+                (p) => (p?.stripeId || p?.priceId || p?.id) === priceId
+              );
+              if (maybe) {
+                const u = parseAmountLocal(maybe.amount);
+                if (u) return u;
+              }
+              // 3) desde sub.products por coursesCount
+              try {
+                const arr2 = Array.isArray(sub?.products) ? sub.products : [];
+                const backendItem = arr2.find(
+                  (it) => (it?.priceId || it?.id) === priceId
+                );
+                if (
+                  backendItem &&
+                  typeof backendItem.coursesCount === "number"
+                ) {
+                  const label =
+                    backendItem.coursesCount === 1
+                      ? "1 Course"
+                      : `${backendItem.coursesCount} Courses`;
+                  const match = (productsList || []).find(
+                    (p) =>
+                      (p?.name || "").trim().toLowerCase() ===
+                      label.toLowerCase()
+                  );
+                  if (match) {
+                    const u = parseAmountLocal(match.amount);
+                    if (u) return u;
+                  }
+                }
+              } catch {}
+              return 0;
+            };
+
             all.forEach((p) => {
               const id = p.stripeId || p.priceId || p.id;
-              const name = p.name || productsMap[id]?.name || id;
-              const meta = findMeta(id, name) || {};
-              let u = getPriceNumber(getAmountText(meta));
-              if (!u) {
-                const m = String(name || "").match(/(\d+)/);
-                const n = m ? parseInt(m[1], 10) : 0;
-                u = mockPriceByCount[n] || 0;
-              }
-              map[id] = u;
+              map[id] = resolvePrice(id);
             });
             return map;
           })()}
@@ -960,8 +1360,25 @@ const SubscriptionsManager = () => {
             const map = {};
             all.forEach((p) => {
               const id = p.stripeId || p.priceId || p.id;
-              const m = String(p?.name || id || "").match(/(\d+)/);
-              map[id] = m ? parseInt(m[1], 10) : 0;
+              // Usar el mismo resolver de courseCount
+              let count = 0;
+              try {
+                const arr2 = Array.isArray(sub?.products) ? sub.products : [];
+                const backendItem = arr2.find(
+                  (it) => (it?.priceId || it?.id) === id
+                );
+                if (
+                  backendItem &&
+                  typeof backendItem.coursesCount === "number"
+                ) {
+                  count = backendItem.coursesCount;
+                }
+              } catch {}
+              if (!count) {
+                const m = String(p?.name || "").match(/(\d+)/);
+                count = m ? parseInt(m[1], 10) : 0;
+              }
+              map[id] = count;
             });
             return map;
           })()}
@@ -976,17 +1393,19 @@ const SubscriptionsManager = () => {
               const deltaEntries = Object.keys({ ...owned, ...edits }).map(
                 (priceId) => {
                   const from = Number(owned[priceId] || 0);
-                  const to = Number(edits[priceId] != null ? edits[priceId] : from);
+                  const to = Number(
+                    edits[priceId] != null ? edits[priceId] : from
+                  );
                   const delta = Math.max(0, to - from);
                   return [priceId, delta];
                 }
               );
-              const items = [
-                ...Object.entries(purch),
-                ...deltaEntries,
-              ]
+              const items = [...Object.entries(purch), ...deltaEntries]
                 .filter(([, q]) => Number(q) > 0)
-                .map(([priceId, q]) => ({ planType: priceId, quantity: Number(q) }));
+                .map(([priceId, q]) => ({
+                  planType: priceId,
+                  quantity: Number(q),
+                }));
               if (!items.length) return;
               if (!MOCK_MODE) {
                 const resp = await createCheckoutWithMultipleItems(
@@ -1001,7 +1420,6 @@ const SubscriptionsManager = () => {
                 if (url) {
                   // debug + robust navigation
                   // eslint-disable-next-line no-console
-                  console.log("[checkout] redirecting to:", url, "resp:", resp);
                   try {
                     window.location.assign(url);
                   } catch (e) {
@@ -1151,7 +1569,6 @@ const SubscriptionsManager = () => {
                     resp?.data?.checkout_url;
                   if (url) {
                     // eslint-disable-next-line no-console
-                    console.log("[checkout-confirm] redirecting to:", url, "resp:", resp);
                     try {
                       window.location.assign(url);
                     } catch (e) {
