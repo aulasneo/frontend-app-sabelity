@@ -3,7 +3,7 @@ import { useIntl } from "react-intl";
 import "./AditionalInfo.css";
 
 // Props: currentPlan, currentPlanTitle, userInventory, messages
-const AditionalInfo = ({ currentPlan, currentPlanTitle, messages }) => {
+const AditionalInfo = ({ messages }) => {
   const intl = useIntl();
   return (
     <div className="additional-content">

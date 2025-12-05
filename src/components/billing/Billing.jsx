@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useIntl } from "react-intl";
 import messages from "./messages";
-import { listUserSubscriptions } from "../data/service";
+import { listUserSubscriptions } from "../../data/service";
 
 const Billing = () => {
   const intl = useIntl();

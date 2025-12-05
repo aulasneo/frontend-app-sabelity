@@ -4,9 +4,15 @@ import {
 } from "@edx/frontend-platform/auth";
 import { getConfig, camelCaseObject } from "@edx/frontend-platform";
 
-export const getUserData = async (username) => {
+export const getUserData = async () => {
   try {
-    const res = await getAuthenticatedUser().get(
+    // Obtener username del usuario autenticado actual
+    const authUser = getAuthenticatedUser()
+    const username = authUser?.username;
+    if (!username) {
+      throw new Error("Authenticated username is not available");
+    }
+    const res = await getAuthenticatedHttpClient().get(
       `${getConfig().LMS_BASE_URL}/api/user/v1/accounts/${username}`
     );
     return camelCaseObject(res.data || res.body);
@@ -15,10 +21,6 @@ export const getUserData = async (username) => {
     throw error;
   }
 };
-
-// Nota: No existe endpoint list_invoices en el backend actual
-
-// Servicios de usuario
 
 /**
  * Obtiene los cursos del usuario
@@ -30,7 +32,6 @@ export const getCourses = async () => {
       `${getConfig().LMS_BASE_URL}/api/courses/v1/courses/`
     );
     const data = camelCaseObject(res.data || res.body);
-    console.log("[service:getCourses] OK:", data);
     return data;
   } catch (error) {
     console.error("Error fetching courses:", {
@@ -64,7 +65,6 @@ export const updateUserPlan = async (username, newLimit) => {
       headers: { "Content-Type": "application/merge-patch+json" },
     });
     const resp = camelCaseObject(response.data);
-    console.log("[service:updateUserPlan] OK:", resp);
     return resp;
   } catch (error) {
     console.error("Error updating plan:", {
@@ -88,7 +88,6 @@ export const listProducts = async () => {
       `${getConfig().STUDIO_BASE_URL}/api/v1/course-subscription/list_products/`
     );
     const data = camelCaseObject(res.data || res.body);
-    console.log("[service:listProducts] OK:", data);
     return data;
   } catch (error) {
     console.error("Error fetching products:", {
@@ -120,7 +119,6 @@ export const createCheckoutSession = async (
         billing_cycle: billingCycle,
       }
     );
-    console.log("[service:createCheckoutSession] OK:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error creating checkout session:", {
@@ -148,7 +146,6 @@ export const deleteCourse = async (courseId) => {
         getConfig().STUDIO_BASE_URL
       }/api/v1/course-inventory/${courseId}/delete/`
     );
-    console.log("[service:deleteCourse] OK:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error deleting course from inventory:", {
@@ -189,7 +186,6 @@ export const createCheckoutWithMultipleItems = async (
         billing_cycle: billingCycle,
       }
     );
-    console.log("[service:createCheckoutWithMultipleItems] OK:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error creating checkout session with multiple items:", {
@@ -218,7 +214,6 @@ export const getUserSubscription = async (subscriptionId) => {
       }/api/v1/course-subscription/${subscriptionId}/get_user_subscription/`
     );
     const data = camelCaseObject(res.data || res.body);
-    console.log("[service:getUserSubscription] OK:", data);
     return data;
   } catch (error) {
     // Si el error es 404, el usuario no tiene suscripción
@@ -246,7 +241,6 @@ export const listUserSubscriptions = async () => {
       }/api/v1/course-subscription/list_subscriptions/`
     );
     const data = camelCaseObject(res.data || res.body);
-    console.log("[service:listUserSubscriptions] OK:", data);
     return data;
   } catch (error) {
     if (error.response?.status === 404) {
@@ -294,7 +288,6 @@ export const cancelSubscription = async (
         },
       }
     );
-    console.log("[service:cancelSubscription] OK:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error canceling subscription:", {
@@ -336,7 +329,6 @@ export const addOrUpdateProduct = async (
         },
       }
     );
-    console.log("[service:addOrUpdateProduct] OK:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error adding/updating product in subscription:", {
@@ -382,7 +374,6 @@ export const changeSubscriptionPlan = async (
         allow_proration: Boolean(allowProration),
       }
     );
-    console.log("[service:changeSubscriptionPlan] OK:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error changing subscription plan:", {
@@ -409,7 +400,6 @@ export const handleSuccessPayment = async (sessionId) => {
       `${getConfig().STUDIO_BASE_URL}/api/v1/course-subscription/success/`,
       { params: { session_id: sessionId } }
     );
-    console.log("[service:handleSuccessPayment] OK:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error handling success payment:", {
@@ -430,7 +420,6 @@ export const getUserInventory = async () => {
     const response = await getAuthenticatedHttpClient().get(
       `${getConfig().STUDIO_BASE_URL}/api/v1/course-inventory/inventory/`
     );
-    console.log("[service:getUserInventory] OK:", response.data);
     return camelCaseObject(response.data);
   } catch (error) {
     console.error("Error fetching user inventory:", {

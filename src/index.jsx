@@ -14,6 +14,8 @@ import messages from './i18n';
 
 import './index.scss';
 import RoutesPages from './RoutesPages';
+import { SubscriptionsProvider } from './contexts/SubscriptionsContext';
+import { BillingProvider } from './contexts/BillingContext';
 
 subscribe(APP_READY, () => {
   ReactDOM.render(
@@ -22,7 +24,11 @@ subscribe(APP_READY, () => {
         <link rel="shortcut icon" href={getConfig().FAVICON_URL} type="image/x-icon" />
       </Helmet>
       <Header />
-      <RoutesPages />
+      <SubscriptionsProvider>
+        <BillingProvider>
+          <RoutesPages />
+        </BillingProvider>
+      </SubscriptionsProvider>
       <FooterSlot />
     </AppProvider>,
     document.getElementById('root'),

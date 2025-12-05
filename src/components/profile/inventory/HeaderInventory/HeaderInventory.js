@@ -1,40 +1,21 @@
 import React from "react";
 import { useIntl } from "react-intl";
-import Button from "../../common/Button";
 import "./HeaderInventory.css";
 import messages from "../messages";
 
 const HeaderInventory = ({
   userInventory,
-  currentSubscription,
-  onOpenInvoices,
 }) => {
   const intl = useIntl();
-  console.log(userInventory);
+
   if (!userInventory) return null;
 
   const total = Number(userInventory.totalCourses || 0);
   const used = Number(userInventory.assignedCoursesCount || 0);
   const pct = total > 0 ? Math.min(100, Math.round((used / total) * 100)) : 0;
 
-  // Extraer nombre del plan desde subscription.items.data
-  const planName = (() => {
-    if (!currentSubscription?.items?.data) return null;
-    const items = currentSubscription.items.data;
-    if (!items.length) return null;
-    // Tomar el primer item y extraer nombre del producto
-    const firstItem = items[0];
-    return firstItem?.price?.product?.name || firstItem?.plan?.name || null;
-  })();
-
   return (
     <div className="inventory-info">
-      <h4 className="inventory-title">{intl.formatMessage(messages.title)}</h4>
-      {planName && (
-        <div style={{ color: "#6b21a8", fontWeight: 600, marginBottom: 8 }}>
-          Plan: {planName}
-        </div>
-      )}
       <div className="inventory-stats">
         <div className="inventory-stat">
           <strong>{intl.formatMessage(messages.totalCourses)}:</strong>{" "}
@@ -76,8 +57,6 @@ const HeaderInventory = ({
           ⚠️ {intl.formatMessage(messages.limitReachedWarning)}
         </div>
       )}
-
-      {/** Billing info moved to Sidebar (opens in a new tab) */}
     </div>
   );
 };

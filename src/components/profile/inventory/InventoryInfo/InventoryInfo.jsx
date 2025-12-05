@@ -1,7 +1,6 @@
 import React from "react";
 import { useIntl } from "react-intl";
 import "./InventoryInfo.css";
-import SubscriptionsManager from "../SubscriptionsManager/SubscriptionsManager";
 import HeaderInventory from "../HeaderInventory/HeaderInventory";
 
 const InventoryInfo = ({ userInventory, onCancelSubscription, isCancelling, currentSubscription }) => {
@@ -16,7 +15,6 @@ const InventoryInfo = ({ userInventory, onCancelSubscription, isCancelling, curr
         onCancelSubscription={onCancelSubscription}
         isCancelling={isCancelling}
       />
-      <SubscriptionsManager />
     </div>
   );
 };

@@ -187,6 +187,11 @@ const messages = {
     defaultMessage: 'No products available.',
     description: 'Shown when there are no products to list in the cart modal',
   },
+  profileTitle: {
+    id: 'home.profile.title',
+    defaultMessage: 'Profile',
+    description: 'Profile page title',
+  },
 };
 
 export default messages;

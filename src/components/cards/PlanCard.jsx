@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { useIntl } from 'react-intl';
 import messages from './messages';
-import Button from '../common/Button';
+import Button from '../buttons/Button';
 import '../home/stylesHome.css';
 import './PlanCard.css';
 
@@ -11,7 +11,7 @@ const PlanCard = ({
   description,
   price,
   className,
-  isDisabled,
+  /* isDisabled, */
   onPlanSelect,
   isPopular = false,
 }) => {
@@ -43,11 +43,11 @@ const PlanCard = ({
           {intl.formatMessage(messages.suscribeMouth || { id: 'suscribe.month.text.fallback', defaultMessage: '/mes' })}
         </span>
       </div>
-      {isDisabled ? (
+      {/* {isDisabled ? (
         <div className="current-plan-badge">
           {intl.formatMessage(messages.currentPlanText || { id: 'current.plan.text.fallback', defaultMessage: 'Plan Actual' })}
         </div>
-      ) : (
+      ) : ( */}
         <Button
           onClick={handleClick}
           variant="primary"
@@ -55,7 +55,7 @@ const PlanCard = ({
           messageId="upgrade.plan.button.text"
           defaultMessage="Suscribite"
         />
-      )}
+      {/* )} */}
     </div>
   );
 };
@@ -66,12 +66,12 @@ PlanCard.propTypes = {
   price: PropTypes.string.isRequired,
   onPlanSelect: PropTypes.func.isRequired,
   className: PropTypes.string.isRequired,
-  isDisabled: PropTypes.bool,
+  /* isDisabled: PropTypes.bool, */
   isPopular: PropTypes.bool,
 };
 
 PlanCard.defaultProps = {
-  isDisabled: false,
+  /* isDisabled: false, */
   isPopular: false,
 };
 

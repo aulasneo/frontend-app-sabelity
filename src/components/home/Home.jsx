@@ -1,42 +1,44 @@
 import React, { useState, useEffect } from "react";
-import Button from "../common/Button";
-import { ModalDialog } from "@openedx/paragon";
-import CartModal from "../cart-modal/CartModal";
+import CartModal from "../modals/CartModal";
 import HeaderBar from "../header-bar/HeaderBar";
-import PlanCardList from "../plan-card-list/PlanCardList";
-import AditionalInfo from "../AditionalInfo/AditionalInfo";
+import PlanCardList from "../cards/plan-card-list/PlanCardList";
+import AditionalInfo from "../aditionalInfo/AditionalInfo";
 import { useIntl } from "@edx/frontend-platform/i18n";
-import { getConfig } from "@edx/frontend-platform";
-import {
-  getUserData,
-  getCourses,
-  listProducts,
-  createCheckoutSession,
-  createCheckoutWithMultipleItems,
-  getUserSubscription,
-  listUserSubscriptions,
-  cancelSubscription,
-  getUserInventory,
-} from "../data/service";
+import { useSubscriptions } from "../../contexts/SubscriptionsContext";
+import { useBilling } from "../../contexts/BillingContext";
+import { useHomeCart } from "./useHomeCart";
 import "./stylesHome.css";
 import messages from "./messages";
+import { computeCurrentTotalsFromSubs } from "./cartTotals";
+import CancelSubscriptionButton from "../modals/CancelSubscriptionButton";
+import PlanLimitModal from "../modals/PlanLimitModal";
+import ErrorModal from "../modals/ErrorModal";
+import ConfirmCancelSubscriptionModal from "../modals/ConfirmCancelSubscriptionModal";
+import SuccessModal from "../modals/SuccessModal";
 
 const Home = () => {
   const intl = useIntl();
+  const {
+    inventory: ctxInventory,
+    products: ctxProducts,
+    subsRaw,
+  } = useSubscriptions() || {};
+  const {
+    courses,
+    refreshUserAndCourses,
+    startCheckout,
+    startMultiCheckout,
+    cancelSubscriptionSafe,
+  } = useBilling() || {};
+
   const [planLimit, setPlanLimit] = useState();
   const [coursesCount, setCoursesCount] = useState();
   const [showModal, setShowModal] = useState(false);
   const [newPlanLimit, setNewPlanLimit] = useState();
   const [deleteCourses, setDeleteCourses] = useState();
   const [products, setProducts] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [userInventory, setUserInventory] = useState(null);
-  const [user, setUser] = useState(null);
   const [currentSubscription, setCurrentSubscription] = useState(null);
   const [isCancelling, setIsCancelling] = useState(false);
-  const [showCart, setShowCart] = useState(false);
-  const [cartSummary, setCartSummary] = useState(null);
-  const [cartQuantities, setCartQuantities] = useState({}); // { priceId: number }
   const [errorModalOpen, setErrorModalOpen] = useState(false);
   const [errorModalMessage, setErrorModalMessage] = useState("");
   // Cancel subscription confirm/success modals
@@ -44,179 +46,75 @@ const Home = () => {
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [successModalMessage, setSuccessModalMessage] = useState("");
 
+  // Lógica del carrito extraída a un helper dedicado: totales actuales
+  // reales desde las suscripciones del backend y el catálogo de productos.
+  const currentTotalsFromSubs = computeCurrentTotalsFromSubs(subsRaw, products);
+
+  const {
+    showCart,
+    openCart,
+    closeCart,
+    cartQuantities,
+    setQty,
+    incQty,
+    decQty,
+    totalItems,
+    cartSummary,
+    handleCartCheckout,
+  } = useHomeCart({
+    planLimit,
+    products,
+    intl,
+    messages,
+    startMultiCheckout,
+    setErrorModalMessage,
+    setErrorModalOpen,
+    currentCourses: currentTotalsFromSubs.totalCourses,
+    currentTotal: currentTotalsFromSubs.totalAmount,
+  });
+
+  // Sincronizar inventory (solo para planLimit) y catálogo desde el contexto global cuando esté disponible
+  useEffect(() => {
+    if (ctxInventory) {
+      if (
+        ctxInventory.totalCourses != null &&
+        ctxInventory.totalCourses !== undefined
+      ) {
+        setPlanLimit((prev) =>
+          typeof prev === "undefined" ? ctxInventory.totalCourses || 0 : prev
+        );
+      }
+    }
+    if (Array.isArray(ctxProducts) && ctxProducts.length) {
+      setProducts((prev) => (prev && prev.length ? prev : ctxProducts));
+    }
+  }, [ctxInventory, ctxProducts]);
+
+  // Derivar suscripción activa desde las suscripciones crudas del contexto
+  useEffect(() => {
+    if (Array.isArray(subsRaw) && subsRaw.length) {
+      const active = subsRaw.find((s) => s.status === "active") || subsRaw[0];
+      setCurrentSubscription(active || null);
+    } else {
+      setCurrentSubscription(null);
+    }
+  }, [subsRaw]);
+
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        // Obtener datos del usuario desde el servicio
-        try {
-          const u = await getUserData();
-          setUser(u);
-        } catch (err) {
-          console.log("Error fetching user data:", err?.response?.status);
-        }
-
-        // Obtener el inventario de cursos del usuario
-        try {
-          const inventory = await getUserInventory();
-          console.log("User inventory:", inventory);
-          setUserInventory(inventory);
-          setPlanLimit(inventory.totalCourses || 0);
-        } catch (err) {
-          console.log("Error fetching inventory:", err?.response?.status);
-          setPlanLimit(0);
-        }
-
-        // Obtener los productos de Stripe
-        try {
-          const productsData = await listProducts();
-          setProducts(productsData || []);
-          console.log("Products:", productsData);
-        } catch (err) {
-          console.error(
-            "Error fetching products:",
-            err?.response?.status,
-            err?.message
-          );
-          setProducts([]);
-        }
-
-        // Listar todas las suscripciones del usuario (solo lectura)
-        try {
-          const allSubs = await listUserSubscriptions();
-          console.log("All user subscriptions:", allSubs);
-
-          // Si hay suscripciones, obtener detalles de la primera activa
-          if (allSubs && allSubs.length > 0) {
-            const activeSub =
-              allSubs.find((sub) => sub.status === "active") || allSubs[0];
-            setCurrentSubscription(activeSub || null);
-            try {
-              const subscription = await getUserSubscription(activeSub.id);
-              console.log("Current subscription details:", subscription);
-            } catch (error) {
-              console.log(
-                "Error fetching subscription details:",
-                error?.response?.status
-              );
-            }
-          } else {
-            setCurrentSubscription(null);
-          }
-        } catch (err) {
-          console.log(
-            "Error listing user subscriptions:",
-            err?.response?.status,
-            err?.message
-          );
-          setCurrentSubscription(null);
+        if (refreshUserAndCourses) {
+          await refreshUserAndCourses();
         }
       } catch (error) {
         console.error("Error fetching initial data:", error);
       } finally {
-        setIsLoading(false);
       }
     };
     fetchInitialData();
-  }, [user?.username]);
+  }, [refreshUserAndCourses]);
 
-  // Shopping cart helpers
-  const openCart = () => {
-    // Construir un resumen base usando el plan actual (si existe)
-    try {
-      const currentCoursesBase = Number(planLimit) || 0;
-      // Resolver precio del plan actual buscando por cantidad en el nombre del producto
-      const match = (products || []).find((p) => {
-        const n = parseInt(String(p?.name || ''), 10) || 0;
-        return n === currentCoursesBase;
-      });
-      const currentTotalBase = match ? (function () {
-        // Extraer número de amount (puede ser "149.00 USD" u otros formatos)
-        const s = String(match.amount || '');
-        const m = s.match(/([0-9]+(?:\.[0-9]+)?)/);
-        return m ? parseFloat(m[1]) : 0;
-      })() : 0;
-      setCartSummary({
-        currentTotal: currentTotalBase,
-        currentCourses: currentCoursesBase,
-        purchasesSubtotal: 0,
-        purchasesCourses: 0,
-        updatesDelta: 0,
-        updatesDeltaCourses: 0,
-        newTotal: currentTotalBase,
-        newCourses: currentCoursesBase,
-      });
-    } catch {}
-    setShowCart(true);
-  };
-  const closeCart = () => setShowCart(false);
-  const setQty = (priceId, qty) => {
-    const q = Math.max(0, parseInt(qty || 0, 10));
-    setCartQuantities((prev) => ({ ...prev, [priceId]: q }));
-  };
-  const incQty = (priceId) =>
-    setQty(priceId, (cartQuantities[priceId] || 0) + 1);
-  const decQty = (priceId) =>
-    setQty(priceId, (cartQuantities[priceId] || 0) - 1);
-
-  // Helpers para sumarizar carrito
-  const getPriceNumber = (amountStr) => {
-    // intenta extraer número desde formatos como "149.00 USD" o "USD $149"
-    if (!amountStr) return 0;
-    const m1 = String(amountStr).match(/([0-9]+(?:\.[0-9]+)?)/);
-    return m1 ? parseFloat(m1[1]) : 0;
-  };
-  const totalItems = Object.values(cartQuantities).reduce(
-    (acc, q) => acc + (Number(q) || 0),
-    0
-  );
-  const subtotal = (products || []).reduce((sum, p) => {
-    const qty = cartQuantities[p.stripeId] || 0;
-    return sum + qty * getPriceNumber(p.amount);
-  }, 0);
-
-  const handleCartCheckout = async () => {
-    try {
-      const items = Object.entries(cartQuantities)
-        .filter(([, q]) => (q || 0) > 0)
-        .map(([priceId, quantity]) => ({ planType: priceId, quantity }));
-      if (!items.length) {
-        alert(
-          intl.formatMessage(
-            messages.cartEmpty || { id: 'home.cart.empty.fallback', defaultMessage: "Your cart is empty." }
-          )
-        );
-        return;
-      }
-      const resp = await createCheckoutWithMultipleItems(items, "month");
-      const url =
-        resp?.url ||
-        resp?.checkout_url ||
-        resp?.data?.url ||
-        resp?.data?.checkout_url;
-      if (url) {
-        window.location.href = url;
-      } else {
-        const msg = intl.formatMessage(
-          messages.checkoutNoUrl || {
-            id: 'home.cart.checkout.no.url.fallback',
-            defaultMessage: "Checkout created but no URL was returned.",
-          }
-        );
-        setErrorModalMessage(msg);
-        setErrorModalOpen(true);
-      }
-    } catch (error) {
-      console.error("Error in cart checkout:", error);
-      const msg = intl.formatMessage(
-        messages.cartCheckoutError || {
-          id: 'home.cart.checkout.error.fallback',
-          defaultMessage: "There was an error initiating the checkout.",
-        }
-      );
-      setErrorModalMessage(msg);
-      setErrorModalOpen(true);
-    }
-  };
+  // La lógica de carrito (openCart, closeCart, cantidades y checkout) vive en useHomeCart
 
   const handleCancelSubscription = () => {
     if (!currentSubscription?.id) return;
@@ -228,24 +126,19 @@ const Home = () => {
     try {
       setIsCancelling(true);
       const cancelAtPeriodEnd = true;
-      await cancelSubscription(
-        currentSubscription.id,
-        cancelAtPeriodEnd,
-        "User initiated cancellation from Home"
-      );
-      const allSubs = await listUserSubscriptions();
-      const activeSub = allSubs && allSubs.find((sub) => sub.status === "active");
-      setCurrentSubscription(activeSub || null);
-      try {
-        const inventory = await getUserInventory();
-        setUserInventory(inventory);
-        setPlanLimit(inventory.totalCourses || 0);
-      } catch (e) {}
+      if (cancelSubscriptionSafe) {
+        await cancelSubscriptionSafe({
+          subscriptionId: currentSubscription.id,
+          cancelAtPeriodEnd,
+          reason: "User initiated cancellation from Home",
+        });
+      }
       setSuccessModalMessage(
         intl.formatMessage(
           messages.cancelSubscriptionSuccess || {
-            id: 'home.cancel.subscription.success.fallback',
-            defaultMessage: "Your subscription cancellation has been scheduled.",
+            id: "home.cancel.subscription.success.fallback",
+            defaultMessage:
+              "Your subscription cancellation has been scheduled.",
           }
         )
       );
@@ -254,7 +147,7 @@ const Home = () => {
       console.error("Error canceling subscription:", error);
       const msg = intl.formatMessage(
         messages.cancelSubscriptionError || {
-          id: 'home.cancel.subscription.error.fallback',
+          id: "home.cancel.subscription.error.fallback",
           defaultMessage: "There was an error canceling your subscription.",
         }
       );
@@ -280,11 +173,8 @@ const Home = () => {
 
       // Si NO tiene suscripción activa, compra directa (checkout de 1 item)
       const planType = product.stripeId || product.id;
-      const response = await createCheckoutSession(planType, "month");
-      if (response && response.url) {
-        window.location.href = response.url;
-      } else {
-        console.error("La respuesta no contiene URL de redirección");
+      if (startCheckout) {
+        await startCheckout({ planType, billingCycle: "month" });
       }
     } catch (error) {
       console.error("Error en handlePlanSelect:", {
@@ -296,29 +186,16 @@ const Home = () => {
   };
 
   useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        const data = await getCourses();
-        setCoursesCount(data.pagination.count);
-      } catch (error) {
-        console.error("Error fetching courses:", error);
-      }
-    };
-    fetchCourses();
-  }, []);
+    if (
+      courses &&
+      courses.pagination &&
+      typeof courses.pagination.count === "number"
+    ) {
+      setCoursesCount(courses.pagination.count);
+    }
+  }, [courses]);
 
   const handleCloseModal = () => setShowModal(false);
-
-  const handleBackToStudio = () => {
-    const redirectBackStudio = `${
-      getConfig().COURSE_AUTHORING_MICROFRONTEND_URL
-    }/home`;
-    if (redirectBackStudio) {
-      window.location.href = redirectBackStudio;
-    } else {
-      console.error("Redirect URL is undefined");
-    }
-  };
 
   // const handleSendEmail = () => {
   //   const email = "info@aulasneo.com";
@@ -330,7 +207,7 @@ const Home = () => {
   //   )}&body=${encodeURIComponent(body)}`;
   //   window.open(mailtoLink, "_blank");
   // };
-
+ 
   const plans =
     products.length > 0
       ? products
@@ -418,138 +295,53 @@ const Home = () => {
         )}
 
         {/* Cancel subscription button placed BELOW subscriptions/inventory */}
-        <div className="cancel-button-suscription">
-          <Button
-            style={{ border: "1px solid #ccc" }}
-            variant="outline"
-            onClick={handleCancelSubscription}
-            disabled={
-              !currentSubscription ||
-              currentSubscription.status !== "active" ||
-              isCancelling
-            }
-          >
-            {isCancelling
-              ? intl.formatMessage(
-                  messages.cancellingSubscription || {
-                    id: 'home.cancelling.subscription.fallback',
-                    defaultMessage: "Cancelling...",
-                  }
-                )
-              : intl.formatMessage(
-                  messages.cancelSubscription || {
-                    id: 'home.cancel.subscription.fallback',
-                    defaultMessage: "Cancel subscription",
-                  }
-                )}
-          </Button>
-        </div>
-
-        <AditionalInfo
-          currentPlan={currentPlan}
-          currentPlanTitle={currentPlanTitle}
-          userInventory={userInventory}
+        <CancelSubscriptionButton
+          intl={intl}
           messages={messages}
+          currentSubscription={currentSubscription}
+          isCancelling={isCancelling}
+          onClick={handleCancelSubscription}
         />
+        <AditionalInfo messages={messages} />
       </div>
 
-      <ModalDialog
+      <PlanLimitModal
+        intl={intl}
+        messages={messages}
         isOpen={showModal}
         onClose={handleCloseModal}
-        title={intl.formatMessage(messages.modalTitle)}
-      >
-        <ModalDialog.Body>
-          <p className="alertMinPlan">
-            {intl.formatMessage(messages.modalExceedsCourses, {
-              currentCourses: coursesCount,
-              newLimit: planLimit,
-              limit: newPlanLimit,
-            })}
-          </p>
-          <p className="alertMinPlan">
-            {intl.formatMessage(messages.modalContent, {
-              limit: newPlanLimit,
-              deleteCourses: deleteCourses,
-            })}
-          </p>
-        </ModalDialog.Body>
-        <ModalDialog.Footer>
-          <Button variant="primary" onClick={handleCloseModal}>
-            {intl.formatMessage(messages.modalButtonClose)}
-          </Button>
-        </ModalDialog.Footer>
-      </ModalDialog>
+        coursesCount={coursesCount}
+        planLimit={planLimit}
+        newPlanLimit={newPlanLimit}
+        deleteCourses={deleteCourses}
+      />
 
       {/* Error Modal */}
-      <ModalDialog
+      <ErrorModal
+        intl={intl}
+        messages={messages}
         isOpen={errorModalOpen}
+        message={errorModalMessage}
         onClose={() => setErrorModalOpen(false)}
-        title={intl.formatMessage(
-          messages.errorTitle || { id: 'home.error.title.fallback', defaultMessage: "Error" }
-        )}
-      >
-        <ModalDialog.Body>
-          <p className="alertMinPlan">{errorModalMessage}</p>
-        </ModalDialog.Body>
-        <ModalDialog.Footer>
-          <Button variant="primary" onClick={() => setErrorModalOpen(false)}>
-            {intl.formatMessage(messages.modalButtonClose)}
-          </Button>
-        </ModalDialog.Footer>
-      </ModalDialog>
+      />
 
       {/* Confirm Cancel Subscription Modal */}
-      <ModalDialog
+      <ConfirmCancelSubscriptionModal
+        intl={intl}
+        messages={messages}
         isOpen={confirmCancelOpen}
         onClose={() => setConfirmCancelOpen(false)}
-        title={intl.formatMessage(messages.cancelSubscription || { id: 'home.cancel.subscription.title.fallback', defaultMessage: "Cancel subscription" })}
-      >
-        <ModalDialog.Body>
-          <p className="alertMinPlan">
-            {intl.formatMessage(
-              messages.confirmCancelSubscription || {
-                id: 'home.confirm.cancel.subscription.fallback',
-                defaultMessage: "Are you sure you want to cancel your subscription?",
-              }
-            )}
-          </p>
-        </ModalDialog.Body>
-        <ModalDialog.Footer>
-          <Button
-            variant="outline"
-            onClick={() => setConfirmCancelOpen(false)}
-            style={{ marginRight: 12, padding: '6px 12px', fontSize: '0.9rem' }}
-          >
-            {intl.formatMessage(messages.modalButtonClose)}
-          </Button>
-          <Button
-            variant="primary"
-            onClick={performCancelSubscription}
-            disabled={isCancelling}
-            style={{ padding: '6px 12px', fontSize: '0.9rem' }}
-          >
-            {isCancelling
-              ? intl.formatMessage(messages.cancellingSubscription || { id: 'home.cancelling.subscription.fallback', defaultMessage: "Cancelling..." })
-              : intl.formatMessage(messages.modalButtonConfirm)}
-          </Button>
-        </ModalDialog.Footer>
-      </ModalDialog>
+        onConfirm={performCancelSubscription}
+        isCancelling={isCancelling}
+      />
 
       {/* Success Modal */}
-      <ModalDialog
+      <SuccessModal
+        intl={intl}
         isOpen={successModalOpen}
+        message={successModalMessage}
         onClose={() => setSuccessModalOpen(false)}
-        title={intl.formatMessage({ id: 'home.success.title', defaultMessage: 'Success' })}
-      >
-        <ModalDialog.Body>
-          <p className="alertMinPlan">{successModalMessage}</p>
-        </ModalDialog.Body>
-        <ModalDialog.Footer>
-          <Button variant="primary" onClick={() => setSuccessModalOpen(false)}>
-            {intl.formatMessage(messages.modalButtonClose)}
-          </Button>
-        </ModalDialog.Footer>
-      </ModalDialog>
+      />
 
       <CartModal
         showCart={showCart}
@@ -562,7 +354,6 @@ const Home = () => {
         incQty={incQty}
         decQty={decQty}
         totalItems={totalItems}
-        subtotal={subtotal}
         onCheckout={handleCartCheckout}
         cartSummary={cartSummary}
       />

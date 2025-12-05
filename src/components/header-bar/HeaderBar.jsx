@@ -1,5 +1,5 @@
 import React from "react";
-import Button from "../common/Button";
+import Button from "../buttons/Button";
 import "./header.css";
 import { useIntl } from "react-intl";
 import messages from "../home/messages";

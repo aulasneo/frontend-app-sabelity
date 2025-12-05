@@ -1,5 +1,5 @@
 import React from "react";
-import PlanCard from "../cards/PlanCard";
+import PlanCard from "../PlanCard";
 import "./plans.css";
 
 const PlanCardList = ({ plans = [], currentPlan = null, onPlanSelect }) => {

@@ -1,4 +1,9 @@
 const subsMessages = {
+  profileTitle: {
+    id: 'subs.profileTitle',
+    defaultMessage: 'Profile',
+    description: 'Title for profile section',
+  },
   mySubscriptions: {
     id: 'subs.title',
     defaultMessage: 'My subscriptions',
@@ -71,6 +76,17 @@ const subsMessages = {
   summaryNewTotal: {
     id: 'subs.summary.newTotal',
     defaultMessage: 'New total',
+    description: 'Label for new total in summary',
+  },
+  modalSubtotal: {
+    id: 'subs.modal.subtotal',
+    defaultMessage: 'Subtotal',
+    description: 'Label for subtotal in confirmation modal',
+  },
+  modalConfirm: {
+    id: 'subs.modal.confirm',
+    defaultMessage: 'Confirm',
+    description: 'Confirm button text in confirmation modal',
   },
 };
 

@@ -1,7 +1,8 @@
 import React from "react";
 import { ModalDialog } from "@openedx/paragon";
-import Button from "../common/Button";
+import Button from "../../components/buttons/Button";
 import "./stylesCart.css";
+import { computeCartTotals } from "../home/cartModalTotals";
 
 const CartModal = ({
   showCart,
@@ -14,7 +15,6 @@ const CartModal = ({
   incQty,
   decQty,
   totalItems = 0,
-  subtotal = 0,
   onCheckout,
   onApplyUpdates,
   unitsById = {},
@@ -33,82 +33,6 @@ const CartModal = ({
     const v = Number(n || 0);
     const s = Number.isInteger(v) ? String(v) : v.toFixed(2);
     return `USD $${s.replace(/\.00$/, "")}`;
-  };
-  const parseAmountLoose = (val) => {
-    if (val == null) return 0;
-    if (typeof val === 'number') return val;
-    const s = String(val);
-    const m = s.replace(',', '.').match(/([0-9]+(?:\.[0-9]+)?)/);
-    return m ? parseFloat(m[1]) : 0;
-  };
-  const extractCountFromName = (name) => {
-    const m = String(name || '').match(/(\d+)/);
-    return m ? parseInt(m[1], 10) : 0;
-  };
-  // Recalcular totales dinámicamente a partir de las props actuales
-  const computeCartTotals = () => {
-    // Base actual (lo que paga hoy) desde el footer si está disponible
-    let currentMoney = cartSummary?.currentTotal ?? null;
-    let currentCourses = cartSummary?.currentCourses ?? null;
-
-    // Si no hay resumen, calcular desde ownedQuantities
-    if (currentMoney == null || currentCourses == null) {
-      currentMoney = 0;
-      currentCourses = 0;
-      Object.keys(ownedQuantities || {}).forEach((id) => {
-        const unit = Number(unitsById[id] || 0);
-        const count = Number(countsById[id] || 0);
-        const ownedQ = Number(ownedQuantities[id] || 0);
-        currentMoney += ownedQ * unit;
-        currentCourses += ownedQ * count;
-      });
-    }
-
-    // Index de productos por id para inferencias cuando no vienen maps
-    const prodIndex = Object.fromEntries((products || []).map(p => [p.stripeId, p]));
-    const getTargetQ = (id) => {
-      const prod = prodIndex[id];
-      if (prod && prod.qty != null) return Number(prod.qty || 0);
-      return Number((cartQuantities && cartQuantities[id]) || 0);
-    };
-    const getUnit = (id) => {
-      const u = unitsById[id];
-      if (u != null && !Number.isNaN(Number(u))) return Number(u);
-      return parseAmountLoose(prodIndex[id]?.amount);
-    };
-    const getCount = (id) => {
-      const c = countsById[id];
-      if (c != null && !Number.isNaN(Number(c))) return Number(c);
-      return extractCountFromName(prodIndex[id]?.name);
-    };
-
-    // Delta respecto de owned: (targetQty - ownedQty) por cada producto
-    const allIds = new Set([
-      ...Object.keys(ownedQuantities || {}),
-      ...Object.keys(prodIndex),
-    ]);
-    let changesMoney = 0;
-    let changesCourses = 0;
-    allIds.forEach((id) => {
-      const unit = Number(getUnit(id) || 0);
-      const count = Number(getCount(id) || 0);
-      const ownedQ = Number(ownedQuantities[id] || 0);
-      const targetQ = getTargetQ(id) || ownedQ;
-      changesMoney += (targetQ - ownedQ) * unit;
-      changesCourses += (targetQ - ownedQ) * count;
-    });
-
-    const targetMoney = currentMoney + changesMoney;
-    const targetCourses = currentCourses + changesCourses;
-
-    return {
-      currentMoney,
-      targetMoney,
-      changesMoney,
-      currentCourses,
-      targetCourses,
-      changesCourses,
-    };
   };
   return (
     <ModalDialog
@@ -153,7 +77,14 @@ const CartModal = ({
             <div className="cart-subtotal">
               <div className="cart-subtotal-label">{fm(messages.cartSubtotal, "Subtotal")}</div>
               {(() => {
-                const { changesMoney } = computeCartTotals();
+                const { changesMoney } = computeCartTotals({
+                  products,
+                  cartQuantities,
+                  unitsById,
+                  countsById,
+                  ownedQuantities,
+                  cartSummary,
+                });
                 return <div className="cart-subtotal-value">{fmtUSD(changesMoney)}</div>;
               })()}
             </div>
@@ -166,7 +97,14 @@ const CartModal = ({
                 currentCourses,
                 targetCourses,
                 changesCourses,
-              } = computeCartTotals();
+              } = computeCartTotals({
+                products,
+                cartQuantities,
+                unitsById,
+                countsById,
+                ownedQuantities,
+                cartSummary,
+              });
               return (
                 <div style={{ display: 'grid', gap: 6, marginTop: 8 }}>
                   <div style={{ color: '#6b7280', display: 'flex', gap: 16, flexWrap: 'wrap' }}>

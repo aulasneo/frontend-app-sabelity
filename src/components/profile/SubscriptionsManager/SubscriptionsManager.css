@@ -119,8 +119,8 @@
 }
 .subs-items-header {
   display: grid;
-  grid-template-columns: 0.1fr 0.7fr 0.2fr 0.1fr 0.1fr;
-  gap: 5rem;
+  grid-template-columns: 0.9fr 1.6fr 5fr 0.5fr;/* Plan un poco más chico, última col auto para botonera */
+  column-gap: 1.25rem; /* plan y price más juntos */
   align-items: center;
   padding: 4px 25px 12px 12px;
   color: #6b7280;
@@ -132,10 +132,12 @@
   font-weight: 600;
   color: #2b2b2b;
   font-size: 1rem;
+  padding-left: 4px; /* menos padding para acercar visualmente el precio al plan */
 }
 .subs-item-price {
   color: #062b60;
   font-weight: 700;
+  font-size: 0.9rem; /* Precio un poco más chico visualmente */
 }
 .subs-item-qty {
   color: #6b7280;
@@ -204,13 +206,14 @@
 }
 .subs-item-line {
   display: grid;
-  grid-template-columns: 0.1fr 0.7fr 0.2fr 0.1fr 0.1fr;
-  gap: 2rem;
+  grid-template-columns: 0.9fr 1.6fr 5fr 0.7fr; /* mismo layout que el header */
+  column-gap: 1.25rem;
   align-items: center;
   padding: 10px 12px;
   border: 1px solid #eee;
   border-radius: 10px;
   background: #fff;
+  margin-bottom: 8px; /* separa visualmente cada producto */
 }
 .subs-item-amount {
   min-width: 28px;
@@ -223,6 +226,7 @@
   display: flex;
   gap: 8px;
   align-items: center;
+  justify-content: flex-end; /* empuja la botonera totalmente a la derecha */
 }
 .qty-btn {
   width: 32px;
@@ -270,74 +274,4 @@
 .spc-price {
   color: #062b60;
   font-weight: 700;
-}
-/* Summary rows extracted from inline styles */
-.subs-summary {
-    display: grid;
-    gap: 6px;
-    margin-top: 12px;
-  }
-  
-  .subs-summary-row {
-    color: #6b7280;
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-  
-  .subs-summary-money-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .subs-summary-money {
-    color: #6b7280;
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-  
-  /* Small margin-top utility used for subtitles */
-  .mt-10 { margin-top: 10px; }
-
-/* Responsive adjustments */
-@media (max-width: 640px) {
-  /* Ocultar encabezado de tabla para evitar overflow */
-  .subs-items-header { display: none; }
-
-  /* Colapsar la fila a 2 columnas: título+precio y controles */
-  .subs-item-line {
-    grid-template-columns: 1fr auto;
-    gap: 10px;
-    align-items: start;
-    padding: 10px;
-  }
-
-  /* Ocultar cantidad adquirida en móvil para ganar espacio */
-  .subs-item-amount { display: none; }
-
-  /* Mostrar precio debajo del título en la primera columna */
-  .subs-item-price {
-    grid-column: 1 / 2;
-    justify-self: start;
-    display: block;
-  }
-
-  /* Controles de cantidad en la segunda columna */
-  .spc-actions {
-    grid-column: 2 / 3;
-    justify-self: end;
-  }
-
-  /* Inputs y botones un poco más compactos */
-  .qty-input { width: 44px; }
-  .qty-btn { width: 30px; height: 30px; }
-
-  /* Resumen: apilar totales y botón */
-  .subs-summary-money-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
 }

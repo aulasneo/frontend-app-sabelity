@@ -25,17 +25,16 @@
 /* Badge with total items */
 .cart-badge {
   position: absolute;
-  top: -6px;
-  right: -6px;
+  top: -9px;
+  right: -9px;
   background: #ef9245;
   color: #fff;
   border-radius: 9999px;
-  padding: 0 6px;
-  font-size: 0.72rem;
-  line-height: 18px;
+  padding: 0 5px;
+  font-size: 0.68rem;
+  line-height: 15px;
   height: 18px;
   min-width: 18px;
   text-align: center;
-  border: 2px solid #fff; /* halo to stand out */
+  border: 2px solid #fff;
 }
-
