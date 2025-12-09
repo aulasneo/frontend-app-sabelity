@@ -9,11 +9,6 @@ const messages = {
     defaultMessage: 'Billing',
     description: 'Billing page title',
   },
-  subscriptionTitle: {
-    id: 'billing.subscription.title',
-    defaultMessage: 'Subscription',
-    description: 'Subscription section title',
-  },
   status: {
     id: 'billing.subscription.status',
     defaultMessage: 'Status',
@@ -63,6 +58,11 @@ const messages = {
     id: 'billing.invoices.pdf',
     defaultMessage: 'PDF',
     description: 'PDF link label',
+  },
+  upcomingNone: {
+    id: 'billing.upcoming.none',
+    defaultMessage: 'No upcoming invoice for this subscription.',
+    description: 'Shown when there is no upcoming invoice',
   },
 };
 

@@ -5,6 +5,7 @@ import {
   createCheckoutSession,
   createCheckoutWithMultipleItems,
   cancelSubscription,
+  getUpcomingInvoice,
 } from "../data/service";
 import { useSubscriptions } from "./SubscriptionsContext";
 
@@ -16,6 +17,9 @@ export const BillingProvider = ({ children }) => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [upcomingInvoice, setUpcomingInvoice] = useState(null);
+  const [upcomingInvoiceLoading, setUpcomingInvoiceLoading] = useState(false);
+  const [upcomingInvoiceError, setUpcomingInvoiceError] = useState(null);
 
   const refreshUserAndCourses = useCallback(async () => {
     try {
@@ -71,6 +75,23 @@ export const BillingProvider = ({ children }) => {
     [refreshAll]
   );
 
+  const fetchUpcomingInvoiceForSubscription = useCallback(
+    async (subscriptionId) => {
+      if (!subscriptionId) return;
+      try {
+        setUpcomingInvoiceLoading(true);
+        setUpcomingInvoiceError(null);
+        const data = await getUpcomingInvoice(subscriptionId);
+        setUpcomingInvoice(data || null);
+      } catch (e) {
+        setUpcomingInvoiceError(e);
+      } finally {
+        setUpcomingInvoiceLoading(false);
+      }
+    },
+    []
+  );
+
   const value = {
     loading,
     error,
@@ -80,6 +101,10 @@ export const BillingProvider = ({ children }) => {
     startCheckout,
     startMultiCheckout,
     cancelSubscriptionSafe,
+    upcomingInvoice,
+    upcomingInvoiceLoading,
+    upcomingInvoiceError,
+    fetchUpcomingInvoiceForSubscription,
   };
 
   return <BillingContext.Provider value={value}>{children}</BillingContext.Provider>;

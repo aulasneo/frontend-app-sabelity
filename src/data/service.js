@@ -23,6 +23,36 @@ export const getUserData = async () => {
 };
 
 /**
+ * Obtiene el detalle de la próxima factura (upcoming invoice) para una suscripción
+ * @param {string} subscriptionId - ID de la suscripción de Stripe
+ * @returns {Promise<Object|null>} Detalle de la próxima factura o null si no hay
+ */
+export const getUpcomingInvoice = async (subscriptionId) => {
+  if (!subscriptionId) {
+    throw new Error("Se requiere el ID de la suscripción");
+  }
+
+  try {
+    const response = await getAuthenticatedHttpClient().get(
+      `${
+        getConfig().STUDIO_BASE_URL
+      }/api/v1/course-subscription/${subscriptionId}/upcoming_invoice/`
+    );
+    return camelCaseObject(response.data || response.body);
+  } catch (error) {
+    if (error.response?.status === 404) {
+      return null;
+    }
+    console.error("Error fetching upcoming invoice:", {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+    });
+    throw error;
+  }
+};
+
+/**
  * Obtiene los cursos del usuario
  * @returns {Promise<Object>} Lista de cursos
  */
@@ -316,8 +346,13 @@ export const addOrUpdateProduct = async (
   }
 
   try {
-    // NOTA: Backend tiene @action con methods=['get'] pero debería ser POST según lógica
-    // Usando GET por ahora según decorador actual del backend
+    // NOTA: Backend tiene @action con methods=['get'], por lo que mantenemos GET.
+    // Aquí permitimos cantidades positivas o negativas (delta), siempre que sean != 0.
+    const parsedQty = parseInt(quantity, 10);
+    if (!Number.isFinite(parsedQty) || parsedQty === 0) {
+      throw new Error("quantity debe ser un entero distinto de 0");
+    }
+
     const response = await getAuthenticatedHttpClient().get(
       `${
         getConfig().STUDIO_BASE_URL
@@ -325,7 +360,7 @@ export const addOrUpdateProduct = async (
       {
         params: {
           price_id: priceId,
-          quantity: Math.max(1, parseInt(quantity, 10) || 1),
+          quantity: parsedQty,
         },
       }
     );

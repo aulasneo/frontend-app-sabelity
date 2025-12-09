@@ -122,23 +122,39 @@ const Home = () => {
   };
 
   const performCancelSubscription = async () => {
-    if (!currentSubscription?.id) return;
+    // Cancelar todas las suscripciones activas del usuario (no solo la actual)
+    const activeSubs = Array.isArray(subsRaw)
+      ? subsRaw.filter((s) => s?.status === "active")
+      : [];
+
+    if (!activeSubs.length) {
+      setConfirmCancelOpen(false);
+      return;
+    }
+
     try {
       setIsCancelling(true);
-      const cancelAtPeriodEnd = true;
+      // Cancelar inmediatamente en Stripe (no esperar al final del período)
+      const cancelAtPeriodEnd = false;
+
       if (cancelSubscriptionSafe) {
-        await cancelSubscriptionSafe({
-          subscriptionId: currentSubscription.id,
-          cancelAtPeriodEnd,
-          reason: "User initiated cancellation from Home",
-        });
+        await Promise.all(
+          activeSubs.map((sub) =>
+            cancelSubscriptionSafe({
+              subscriptionId: sub.id,
+              cancelAtPeriodEnd,
+              reason:
+                "User initiated cancellation from Home (all subscriptions)",
+            })
+          )
+        );
       }
       setSuccessModalMessage(
         intl.formatMessage(
           messages.cancelSubscriptionSuccess || {
             id: "home.cancel.subscription.success.fallback",
             defaultMessage:
-              "Your subscription cancellation has been scheduled.",
+              "Your subscription cancellations have been scheduled.",
           }
         )
       );

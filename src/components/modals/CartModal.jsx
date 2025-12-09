@@ -105,17 +105,73 @@ const CartModal = ({
                 ownedQuantities,
                 cartSummary,
               });
+
+              const hasMoneyChanges = Number(changesMoney) !== 0;
+              const hasCoursesChanges = Number(changesCourses) !== 0;
+
+              const displayNewMoney = hasMoneyChanges
+                ? targetMoney
+                : 0;
+              const displayNewCourses = hasCoursesChanges
+                ? targetCourses
+                : 0;
+
               return (
-                <div style={{ display: 'grid', gap: 6, marginTop: 8 }}>
-                  <div style={{ color: '#6b7280', display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-                    <span>Current total: <strong>{fmtUSD(currentMoney)}</strong></span>
-                    <span>Changes: <strong>{changesMoney >= 0 ? '+' : ''}{fmtUSD(changesMoney)}</strong></span>
-                    <span>New total: <strong>{fmtUSD(targetMoney)}</strong></span>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: 16,
+                    marginTop: 8,
+                    fontSize: 15,
+                    padding: '0px 10px 0 10px',
+                    justifyItems: 'center',
+                  }}
+                >
+                  {/* Columna izquierda: cursos */}
+                  <div
+                    style={{
+                      color: '#6b7280',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 4,
+                    }}
+                  >
+                    <span>
+                      {fm(messages.currentCoursesLabel, "Current courses")}:{' '}
+                      <strong>{currentCourses}</strong>
+                    </span>
+                    <span>
+                      {fm(messages.changesLabel, "Changes")}:{' '}
+                      <strong>{changesCourses >= 0 ? '+' : ''}{changesCourses}</strong>
+                    </span>
+                    <span>
+                      {fm(messages.newCoursesLabel, "New courses")}:{' '}
+                      <strong>{displayNewCourses}</strong>
+                    </span>
                   </div>
-                  <div style={{ color: '#6b7280', display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-                    <span>Current courses: <strong>{currentCourses}</strong></span>
-                    <span>Changes: <strong>{changesCourses >= 0 ? '+' : ''}{changesCourses}</strong></span>
-                    <span>New courses: <strong>{targetCourses}</strong></span>
+
+                  {/* Columna derecha: montos */}
+                  <div
+                    style={{
+                      color: '#6b7280',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 4,
+                    }}
+                  >
+                    <span>
+                      {fm(messages.currentTotalLabel, "Current total")}:{' '}
+                      <strong>{fmtUSD(currentMoney)}</strong>
+                    </span>
+                    <span>
+                      {fm(messages.changesLabel, "Changes")}:{' '}
+                      <strong>{changesMoney >= 0 ? '+' : ''}{fmtUSD(changesMoney)}</strong>
+                    </span>
+                    <span>
+                      {fm(messages.newTotalLabel, "New total")}:{' '}
+                      <strong>{fmtUSD(displayNewMoney)}</strong>
+                    </span>
                   </div>
                 </div>
               );

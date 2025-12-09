@@ -187,6 +187,31 @@ const messages = {
     defaultMessage: 'No products available.',
     description: 'Shown when there are no products to list in the cart modal',
   },
+  currentTotalLabel: {
+    id: 'home.cart.current.total',
+    defaultMessage: 'Current total',
+    description: 'Label for current total in cart summary',
+  },
+  changesLabel: {
+    id: 'home.cart.changes',
+    defaultMessage: 'Changes',
+    description: 'Label for changes in cart summary',
+  },
+  newTotalLabel: {
+    id: 'home.cart.new.total',
+    defaultMessage: 'New total',
+    description: 'Label for new total in cart summary',
+  },
+  currentCoursesLabel: {
+    id: 'home.cart.current.courses',
+    defaultMessage: 'Current courses',
+    description: 'Label for current courses in cart summary',
+  },
+  newCoursesLabel: {
+    id: 'home.cart.new.courses',
+    defaultMessage: 'New courses',
+    description: 'Label for new courses in cart summary',
+  },
   profileTitle: {
     id: 'home.profile.title',
     defaultMessage: 'Profile',

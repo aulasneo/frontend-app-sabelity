@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useIntl } from "react-intl";
 import messages from "./messages";
 import { listUserSubscriptions } from "../../data/service";
+import UpcomingInvoicePanel from "./UpcomingInvoicePanel";
+import "./billing.css";
 
 const Billing = () => {
   const intl = useIntl();
@@ -74,23 +76,13 @@ const Billing = () => {
         <h1>{intl.formatMessage(messages.billingTitle)}</h1>
 
         {loading && <div>Loading...</div>}
-        {error && <div style={{ color: "#b91c1c" }}>{error}</div>}
+        {error && <div className="billing-error">{error}</div>}
 
         {/* Estado de suscripción con fechas de periodo */}
-        <div
-          style={{
-            border: "1px solid #eee",
-            borderRadius: 12,
-            padding: 16,
-            marginBottom: 16,
-          }}
-        >
-          <h3 style={{ marginTop: 0 }}>
-            {intl.formatMessage(messages.subscriptionTitle)}
-          </h3>
+        <div className="billing-card">
           {subscription ? (
             <>
-              <div style={{ color: "#6b7280" }}>
+              <div className="billing-text-muted">
                 <strong>{intl.formatMessage(messages.status)}:</strong>{" "}
                 {subscription.status}
               </div>
@@ -99,7 +91,7 @@ const Billing = () => {
                 const items = subscription?.items?.data || [];
                 if (items.length > 0) {
                   return (
-                    <div style={{ color: "#6b7280", marginTop: 6 }}>
+                    <div className="billing-text-muted billing-mt-6">
                       <strong>Plan:</strong>{" "}
                       {items.map((item, idx) => {
                         const name = item?.price?.product?.name || item?.plan?.name || "Unknown";
@@ -117,7 +109,7 @@ const Billing = () => {
                 return null;
               })()}
               {currentPeriodStartLocal && (
-                <div style={{ color: "#6b7280", marginTop: 6 }}>
+                <div className="billing-text-muted billing-mt-6">
                   <strong>
                     {intl.formatMessage(messages.currentPeriodStart)}:
                   </strong>{" "}
@@ -125,14 +117,17 @@ const Billing = () => {
                 </div>
               )}
               {nextBillingLocal && (
-                <div style={{ color: "#6b7280", marginTop: 6 }}>
+                <div className="billing-text-muted billing-mt-6">
                   <strong>{intl.formatMessage(messages.nextBilling)}:</strong>{" "}
                   {nextBillingLocal}
                 </div>
               )}
+
+              {/* Upcoming invoice details */}
+              <UpcomingInvoicePanel subscriptionId={subscription?.id} />
             </>
           ) : (
-            <div style={{ color: "#6b7280" }}>
+            <div className="billing-text-muted">
               {intl.formatMessage(messages.noActiveSubscription)}
             </div>
           )}

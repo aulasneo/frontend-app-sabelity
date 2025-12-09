@@ -30,16 +30,27 @@ const SubscriptionsTable = ({ onSummaryChange }) => {
     return "-";
   };
 
-  // Clave de producto consistente con packsByProduct (priceId/planType/...)
-  const getProductKey = (item) =>
-    item?.price?.id ||
-    item?.priceId ||
-    item?.price_id ||
-    item?.planType ||
-    item?.plan_type ||
-    item?.stripeId ||
-    item?.id ||
-    null;
+  // Clave de producto consistente con packsByProduct (debe ser un ID de "price_" cuando exista)
+  const getProductKey = (item) => {
+    if (!item) return null;
+
+    // Priorizar siempre IDs de precio explícitos
+    if (item.price && item.price.id) return item.price.id; // Stripe price object
+    if (item.priceId) return item.priceId;
+    if (item.price_id) return item.price_id;
+    if (item.stripeId) return item.stripeId; // en nuestro catálogo suele ser el price_id
+
+    // IDs de plan lógicos que también usamos como clave en otros contextos
+    if (item.planType) return item.planType;
+    if (item.plan_type) return item.plan_type;
+
+    // Como último recurso, usar id solo si parece un price_id de Stripe
+    if (item.id && String(item.id).startsWith("price_")) {
+      return item.id;
+    }
+
+    return item.id || null;
+  };
 
   // Estado local de cantidades por producto (clave Stripe/producto)
   const [quantitiesByProduct, setQuantitiesByProduct] = useState(() => {
@@ -124,7 +135,7 @@ const SubscriptionsTable = ({ onSummaryChange }) => {
       </h5>
       <div className="subs-items-header">
         <div>{intl.formatMessage(subsMessages.tableSubscriptions)}</div>
-        <div>{intl.formatMessage(subsMessages.tablePlan)}</div>
+        <div>{intl.formatMessage(subsMessages.tableProduct)}</div>
         <div>{intl.formatMessage(subsMessages.tablePrice)}</div>
         <div>{intl.formatMessage(subsMessages.tableQty)}</div>
       </div>

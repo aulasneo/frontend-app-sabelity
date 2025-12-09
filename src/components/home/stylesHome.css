@@ -82,6 +82,17 @@ h4 {
   border-left: 4px solid #d32f2f;
 }
 
+.alertSuccess {
+  color: #1e7b34;
+  background-color: #e6f6ea;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-top: 3.2rem;
+  text-align: center;
+  font-size: 0.95rem;
+  border-left: 4px solid #1e7b34;
+}
+
 .cancel-button-suscription {
   display: flex;
   justify-content: center;

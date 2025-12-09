@@ -28,9 +28,9 @@ const subsMessages = {
     id: 'subs.table.subscriptions',
     defaultMessage: 'Subscriptions',
   },
-  tablePlan: {
-    id: 'subs.table.plan',
-    defaultMessage: 'Plan',
+  tableProduct: {
+    id: 'subs.table.product',
+    defaultMessage: 'Product',
   },
   tablePrice: {
     id: 'subs.table.price',

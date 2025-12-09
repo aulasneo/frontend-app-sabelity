@@ -13,7 +13,7 @@ const SuccessModal = ({ intl, isOpen, message, onClose }) => {
       })}
     >
       <ModalDialog.Body>
-        <p className="alertMinPlan">{message}</p>
+        <p className="alertSuccess">{message}</p>
       </ModalDialog.Body>
       <ModalDialog.Footer>
         <Button variant="primary" onClick={onClose}>

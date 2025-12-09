@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { ModalDialog } from "@openedx/paragon";
 import InventoryInfo from "../profile/inventory/InventoryInfo/InventoryInfo";
 import { useIntl } from "react-intl";
 import SubscriptionsManager from "./SubscriptionsManager/SubscriptionsManager";
@@ -6,14 +7,13 @@ import SubscriptionsFooter from "./SubscriptionsManager/SuscriptionsFooter/Subsc
 import messages from "./SubscriptionsManager/subscriptionsMessages";
 import homeMessages from "../home/messages";
 import { computeCurrentTotalsFromSubs } from "../home/cartTotals";
-import CartModal from "../modals/CartModal";
-import { useHomeCart } from "../home/useHomeCart";
 import { useBilling } from "../../contexts/BillingContext";
 import CancelSubscriptionButton from "../modals/CancelSubscriptionButton";
 import ConfirmCancelSubscriptionModal from "../modals/ConfirmCancelSubscriptionModal";
 import SuccessModal from "../modals/SuccessModal";
 import ErrorModal from "../modals/ErrorModal";
-import { cancelSubscription } from "../../data/service";
+import ProfileConfirmChangesModal from "../modals/ProfileConfirmChangesModal";
+import { cancelSubscription, addOrUpdateProduct } from "../../data/service";
 import { useSubscriptions } from "../../contexts/SubscriptionsContext";
 import "./profile.css";
 
@@ -26,6 +26,7 @@ const ProfileInner = () => {
   const [currentSubscription, setCurrentSubscription] = useState(null);
   const [isCancelling, setIsCancelling] = useState(false);
   const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
+  const [confirmChangesOpen, setConfirmChangesOpen] = useState(false);
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [successModalMessage, setSuccessModalMessage] = useState("");
   const [errorModalOpen, setErrorModalOpen] = useState(false);
@@ -39,28 +40,6 @@ const ProfileInner = () => {
     subsRaw,
     products || []
   );
-
-  // Reutilizar la lógica de carrito del Home para el modal de checkout
-  const {
-    showCart,
-    openCart,
-    closeCart,
-    cartQuantities,
-    setQty,
-    incQty,
-    decQty,
-    totalItems,
-    cartSummary,
-    handleCartCheckout,
-  } = useHomeCart({
-    intl,
-    messages: homeMessages,
-    startMultiCheckout,
-    setErrorModalMessage,
-    setErrorModalOpen,
-    currentCourses: currentTotalsFromSubs.totalCourses,
-    currentTotal: currentTotalsFromSubs.totalAmount,
-  });
 
   useEffect(() => {
     // Sincronizar inventory y suscripción activa desde el contexto
@@ -78,25 +57,88 @@ const ProfileInner = () => {
     setConfirmCancelOpen(true);
   };
 
-  const performCancelSubscription = async () => {
+  const applyProfileCartChanges = async () => {
     if (!currentSubscription?.id) return;
+
     try {
-      setIsCancelling(true);
-      const cancelAtPeriodEnd = true;
-      await cancelSubscription(
-        currentSubscription.id,
-        cancelAtPeriodEnd,
-        "User initiated cancellation from Profile"
-      );
+      const desired = latestQuantitiesByProduct || {};
+      const base = packsByProduct || {};
+      const subscriptionId = currentSubscription.id;
+
+      const ops = [];
+
+      Object.keys(desired).forEach((priceId) => {
+        const currentQty = base[priceId] || 0;
+        const nextQty = desired[priceId] ?? currentQty;
+        const diff = nextQty - currentQty;
+        if (!diff) return;
+
+        ops.push(addOrUpdateProduct(subscriptionId, priceId, diff));
+      });
+
+      if (!ops.length) {
+        closeCart();
+        return;
+      }
+
+      await Promise.all(ops);
       try {
         await refreshAll();
       } catch (e) {}
+
+      setSuccessModalMessage(
+        intl.formatMessage(
+          homeMessages.updateSubscriptionSuccess || {
+            id: "profile.update.subscription.success.fallback",
+            defaultMessage: "Your subscription has been updated.",
+          }
+        )
+      );
+      setSuccessModalOpen(true);
+      setConfirmChangesOpen(false);
+    } catch (error) {
+      const msg = intl.formatMessage(
+        homeMessages.updateSubscriptionError || {
+          id: "profile.update.subscription.error.fallback",
+          defaultMessage: "There was an error updating your subscription.",
+        }
+      );
+      setErrorModalMessage(msg);
+      setErrorModalOpen(true);
+    }
+  };
+
+  const performCancelSubscription = async () => {
+    // Cancelar todas las suscripciones activas del usuario
+    const activeSubs = Array.isArray(subsRaw)
+      ? subsRaw.filter((s) => s?.status === "active")
+      : [];
+
+    if (!activeSubs.length) {
+      setConfirmCancelOpen(false);
+      return;
+    }
+
+    try {
+      setIsCancelling(true);
+      // Cancelar inmediatamente en Stripe (no esperar al final del período)
+      const cancelAtPeriodEnd = false;
+      await Promise.all(
+        activeSubs.map((sub) =>
+          cancelSubscription(
+            sub.id,
+            cancelAtPeriodEnd,
+            "User initiated cancellation from Profile (all subscriptions)"
+          )
+        )
+      );
+      await refreshAll();
       setSuccessModalMessage(
         intl.formatMessage(
           homeMessages.cancelSubscriptionSuccess || {
-            id: "home.cancel.subscription.success.fallback",
+            id: "profile.cancel.subscription.success.fallback",
             defaultMessage:
-              "Your subscription cancellation has been scheduled.",
+              "Your subscription cancellations have been scheduled.",
           }
         )
       );
@@ -118,22 +160,7 @@ const ProfileInner = () => {
 
   const handleReviewChanges = () => {
     if (!hasChanges) return;
-
-    // Construir cantidades adicionales (deltas positivos) respecto a lo ya comprado
-    const desired = latestQuantitiesByProduct || {};
-    const base = packsByProduct || {};
-
-    Object.keys(desired).forEach((key) => {
-      const currentQty = base[key] || 0;
-      const nextQty = desired[key] ?? currentQty;
-      const diff = nextQty - currentQty;
-      if (diff > 0) {
-        setQty(key, diff);
-      }
-    });
-
-    // Abrir el mismo CartModal que en Home con estos items
-    openCart();
+    setConfirmChangesOpen(true);
   };
 
   return (
@@ -208,24 +235,15 @@ const ProfileInner = () => {
           onClose={() => setSuccessModalOpen(false)}
         />
 
-        {/* Cart modal para confirmar cambios desde Profile, reutilizando el de Home */}
-        <CartModal
-          showCart={showCart}
-          closeCart={closeCart}
+        <ProfileConfirmChangesModal
           intl={intl}
-          messages={homeMessages}
-          products={(products || []).slice().sort((a, b) => {
-            const na = parseInt(a?.name, 10) || 0;
-            const nb = parseInt(b?.name, 10) || 0;
-            return na - nb;
-          })}
-          cartQuantities={cartQuantities}
-          setQty={setQty}
-          incQty={incQty}
-          decQty={decQty}
-          totalItems={totalItems}
-          onCheckout={handleCartCheckout}
-          cartSummary={cartSummary}
+          isOpen={confirmChangesOpen}
+          onClose={() => setConfirmChangesOpen(false)}
+          onConfirm={applyProfileCartChanges}
+          currentTotal={currentTotalsFromSubs.totalAmount}
+          changesMoney={summaryChangesMoney}
+          currentCourses={currentTotalsFromSubs.totalCourses}
+          changesCourses={summaryChangesCourses}
         />
       </div>
     </main>

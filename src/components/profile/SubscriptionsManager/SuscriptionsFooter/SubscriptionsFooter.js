@@ -24,6 +24,17 @@ const SubscriptionsFooter = ({
   const changesMoneySign = changesMoney >= 0 ? "+" : "";
   const changesCoursesSign = changesCourses >= 0 ? "+" : "";
 
+  const hasMoneyChanges = Number(changesMoney) !== 0;
+  const hasCoursesChanges = Number(changesCourses) !== 0;
+
+  const displayNewMoney = hasMoneyChanges
+    ? Number(currentMoney || 0) + Number(changesMoney || 0)
+    : 0;
+
+  const displayNewCourses = hasCoursesChanges
+    ? Number(currentCourses || 0) + Number(changesCourses || 0)
+    : 0;
+
   return (
     <div className="subs-summary-container">
       <div className="subs-summary">
@@ -42,7 +53,7 @@ const SubscriptionsFooter = ({
             </span>
             <span>
               {intl.formatMessage(subsMessages.summaryNewTotal)}:{" "}
-              <strong>{fmt(targetMoney)}</strong>
+              <strong>{fmt(displayNewMoney)}</strong>
             </span>
           </div>
         </div>
@@ -61,7 +72,7 @@ const SubscriptionsFooter = ({
           </span>
           <span>
             {intl.formatMessage(subsMessages.summaryNewCourses)}:{" "}
-            <strong>{targetCourses}</strong>
+            <strong>{displayNewCourses}</strong>
           </span>
         </div>
 

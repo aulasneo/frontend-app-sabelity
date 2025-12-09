@@ -25,6 +25,34 @@ export function computeCartTotals({
   let currentMoney = cartSummary?.currentTotal ?? null;
   let currentCourses = cartSummary?.currentCourses ?? null;
 
+  // Si el caller ya pasó cambios precomputados (Profile), respetarlos y no
+  // recalcular a partir de cartQuantities. Esto mantiene el comportamiento
+  // original de Home (donde cartSummary no tiene 'changes') y permite que
+  // el Profile muestre bajas como deltas negativos.
+  if (
+    cartSummary &&
+    typeof cartSummary.changes === "number" &&
+    typeof cartSummary.changesCourses === "number"
+  ) {
+    const baseMoney =
+      currentMoney != null ? Number(currentMoney) || 0 : 0;
+    const baseCourses =
+      currentCourses != null ? Number(currentCourses) || 0 : 0;
+    const changesMoney = Number(cartSummary.changes) || 0;
+    const changesCourses = Number(cartSummary.changesCourses) || 0;
+    const targetMoney = baseMoney + changesMoney;
+    const targetCourses = baseCourses + changesCourses;
+
+    return {
+      currentMoney: baseMoney,
+      targetMoney,
+      changesMoney,
+      currentCourses: baseCourses,
+      targetCourses,
+      changesCourses,
+    };
+  }
+
   // Si no hay resumen, calcular desde ownedQuantities
   if (currentMoney == null || currentCourses == null) {
     currentMoney = 0;
