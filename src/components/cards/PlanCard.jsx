@@ -43,17 +43,12 @@ const PlanCard = ({
           {intl.formatMessage(messages.suscribeMouth || { id: 'suscribe.month.text.fallback', defaultMessage: '/mes' })}
         </span>
       </div>
-      {/* {isDisabled ? (
-        <div className="current-plan-badge">
-          {intl.formatMessage(messages.currentPlanText || { id: 'current.plan.text.fallback', defaultMessage: 'Plan Actual' })}
-        </div>
-      ) : ( */}
         <Button
           onClick={handleClick}
           variant="primary"
           className="full-width"
           messageId="upgrade.plan.button.text"
-          defaultMessage="Suscribite"
+          defaultMessage="Suscribe"
         />
       {/* )} */}
     </div>
