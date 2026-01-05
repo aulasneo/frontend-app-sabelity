@@ -3,6 +3,19 @@
   border-radius: 12px;
   padding: 16px;
   margin-bottom: 16px;
+  background: #fff;
+}
+
+.billing-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.billing-history-button {
+  margin-left: auto;
 }
 
 .billing-card-title {
@@ -92,30 +105,33 @@
   color: #6b7280;
 }
 
-.billing-upcoming-pagination {
-  margin-top: 8px;
+.billing-history-pagination-wrapper {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.billing-history-pagination {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 8px;
-  font-size: 13px;
 }
 
-.billing-upcoming-page-btn {
-  padding: 4px 8px;
-  border-radius: 4px;
-  border: 1px solid #d1d5db;
-  background: #fff;
-  color: #374151;
-  cursor: pointer;
+.billing-page-button {
+  min-width: 32px;
+  padding: 4px 10px;
 }
 
-.billing-upcoming-page-btn:disabled {
-  opacity: 0.4;
-  cursor: default;
+.billing-page-current {
+  font-weight: 600;
 }
 
-.billing-upcoming-page-info {
+.billing-page-info {
+  font-size: 12px;
   color: #6b7280;
 }
 

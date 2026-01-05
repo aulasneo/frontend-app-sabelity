@@ -1,40 +1,31 @@
 import React, { useEffect, useState } from "react";
 import { useIntl } from "react-intl";
+import { useNavigate } from "react-router-dom";
+import Button from "../buttons/Button";
 import messages from "./messages";
-import { listUserSubscriptions } from "../../data/service";
 import UpcomingInvoicePanel from "./UpcomingInvoicePanel";
+import { useSubscriptions } from "../../contexts/SubscriptionsContext";
 import "./billing.css";
 
 const Billing = () => {
   const intl = useIntl();
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const { subsRaw, loading } = useSubscriptions() || {};
   const [error, setError] = useState("");
   const [subscription, setSubscription] = useState(null);
   // Eliminado: invoices (no hay endpoint en backend)
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        // Cargar suscripción activa (si la hay)
-        try {
-          const subs = await listUserSubscriptions();
-          const active = Array.isArray(subs)
-            ? subs.find((s) => s.status === "active")
-            : null;
-          setSubscription(active || null);
-        } catch (e) {
-          setSubscription(null);
-        }
-        // No invoices endpoint available; omitido
-      } catch (e) {
-        setError(e?.message || "Error while loading billing data");
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, [intl]);
+    try {
+      const active = Array.isArray(subsRaw)
+        ? subsRaw.find((s) => s.status === "active")
+        : null;
+      setSubscription(active || null);
+    } catch (e) {
+      setError(e?.message || "Error while loading billing data");
+      setSubscription(null);
+    }
+  }, [subsRaw]);
 
   const parseToLocalDate = (val) => {
     if (!val && val !== 0) return null;
@@ -73,7 +64,16 @@ const Billing = () => {
   return (
     <main>
       <div className="content-home">
-        <h1>{intl.formatMessage(messages.billingTitle)}</h1>
+        <div className="billing-header-row">
+          <h2>{intl.formatMessage(messages.billingTitle)}</h2>
+          <Button
+            onClick={() => navigate("/billing/history")}
+            className="billing-history-button"
+            variant="primary"
+            messageId={messages.viewHistory.id}
+            defaultMessage={messages.viewHistory.defaultMessage}
+          />
+        </div>
 
         {loading && <div>Loading...</div>}
         {error && <div className="billing-error">{error}</div>}

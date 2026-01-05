@@ -23,6 +23,33 @@ export const getUserData = async () => {
 };
 
 /**
+ * Obtiene el historial global de facturación del usuario (todas las invoices pagadas)
+ * @returns {Promise<Object>} { currency, payments, currentMonthTotal }
+ */
+export const getBillingHistory = async () => {
+  try {
+    const res = await getAuthenticatedHttpClient().get(
+      `${
+        getConfig().STUDIO_BASE_URL
+      }/api/v1/course-subscription/billing_history/`
+    );
+    const data = camelCaseObject(res.data || res.body);
+    return data;
+  } catch (error) {
+    if (error.response?.status === 404) {
+      // No Stripe customer / no billing history
+      return { currency: "usd", payments: [], currentMonthTotal: 0 };
+    }
+    console.error("Error fetching billing history:", {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+    });
+    throw error;
+  }
+};
+
+/**
  * Obtiene el detalle de la próxima factura (upcoming invoice) para una suscripción
  * @param {string} subscriptionId - ID de la suscripción de Stripe
  * @returns {Promise<Object|null>} Detalle de la próxima factura o null si no hay

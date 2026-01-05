@@ -6,6 +6,8 @@ import {
   createCheckoutWithMultipleItems,
   cancelSubscription,
   getUpcomingInvoice,
+  getUserSubscription,
+  getBillingHistory,
 } from "../data/service";
 import { useSubscriptions } from "./SubscriptionsContext";
 
@@ -20,6 +22,12 @@ export const BillingProvider = ({ children }) => {
   const [upcomingInvoice, setUpcomingInvoice] = useState(null);
   const [upcomingInvoiceLoading, setUpcomingInvoiceLoading] = useState(false);
   const [upcomingInvoiceError, setUpcomingInvoiceError] = useState(null);
+  const [subscriptionDetails, setSubscriptionDetails] = useState(null);
+  const [subscriptionDetailsLoading, setSubscriptionDetailsLoading] = useState(false);
+  const [subscriptionDetailsError, setSubscriptionDetailsError] = useState(null);
+  const [billingHistory, setBillingHistory] = useState(null);
+  const [billingHistoryLoading, setBillingHistoryLoading] = useState(false);
+  const [billingHistoryError, setBillingHistoryError] = useState(null);
 
   const refreshUserAndCourses = useCallback(async () => {
     try {
@@ -59,6 +67,36 @@ export const BillingProvider = ({ children }) => {
         window.location.href = session.url;
       }
       return session;
+    },
+    []
+  );
+
+  const fetchBillingHistory = useCallback(async () => {
+    try {
+      setBillingHistoryLoading(true);
+      setBillingHistoryError(null);
+      const data = await getBillingHistory();
+      setBillingHistory(data || { currency: "usd", payments: [], currentMonthTotal: 0 });
+    } catch (e) {
+      setBillingHistoryError(e);
+    } finally {
+      setBillingHistoryLoading(false);
+    }
+  }, []);
+
+  const fetchSubscriptionDetails = useCallback(
+    async (subscriptionId) => {
+      if (!subscriptionId) return;
+      try {
+        setSubscriptionDetailsLoading(true);
+        setSubscriptionDetailsError(null);
+        const data = await getUserSubscription(subscriptionId);
+        setSubscriptionDetails(data || null);
+      } catch (e) {
+        setSubscriptionDetailsError(e);
+      } finally {
+        setSubscriptionDetailsLoading(false);
+      }
     },
     []
   );
@@ -105,6 +143,14 @@ export const BillingProvider = ({ children }) => {
     upcomingInvoiceLoading,
     upcomingInvoiceError,
     fetchUpcomingInvoiceForSubscription,
+    subscriptionDetails,
+    subscriptionDetailsLoading,
+    subscriptionDetailsError,
+    fetchSubscriptionDetails,
+    billingHistory,
+    billingHistoryLoading,
+    billingHistoryError,
+    fetchBillingHistory,
   };
 
   return <BillingContext.Provider value={value}>{children}</BillingContext.Provider>;

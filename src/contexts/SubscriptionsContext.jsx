@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useRef } from "react";
 import {
   listUserSubscriptions,
   getUserSubscription,
@@ -17,6 +17,9 @@ export const SubscriptionsProvider = ({ children }) => {
   const [packsByProduct, setPacksByProduct] = useState({}); // priceId -> quantity (suscripciones/packs)
   const [totalCoursesFromSubscriptions, setTotalCoursesFromSubscriptions] =
     useState(0); // suma de total_courses_count de todas las suscripciones
+
+  // Evitar que el auto-refresh se ejecute dos veces en modo StrictMode
+  const didAutoRefreshRef = useRef(false);
 
   const refreshAll = async () => {
     setLoading(true);
@@ -148,8 +151,10 @@ export const SubscriptionsProvider = ({ children }) => {
   };
 
   useEffect(() => {
+    if (didAutoRefreshRef.current) return;
+    didAutoRefreshRef.current = true;
     refreshAll();
-  }, []);
+  }, [refreshAll]);
 
   const value = {
     loading,

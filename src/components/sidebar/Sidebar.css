@@ -1,6 +1,8 @@
 .app-content {
   overflow-x: hidden; /* evita scroll horizontal cuando hay grids anchos */
+  background: #f9fafb;
 }
+
 .app-layout {
   display: grid;
   grid-template-columns: 240px 1fr;
