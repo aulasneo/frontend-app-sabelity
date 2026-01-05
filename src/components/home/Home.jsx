@@ -22,6 +22,7 @@ const Home = () => {
     inventory: ctxInventory,
     products: ctxProducts,
     subsRaw,
+    packsByProduct,
   } = useSubscriptions() || {};
   const {
     courses,
@@ -181,6 +182,16 @@ const Home = () => {
       // Si ya tiene una suscripción activa, agregamos el producto al carrito
       if (currentSubscription && currentSubscription.status === "active") {
         const priceId = product.stripeId || product.priceId || product.id;
+
+        // Si ya posee este producto (packsByProduct > 0), solo abrir el carrito
+        // sin incrementar cantidad automáticamente (caso botón "Change").
+        const ownedQty = packsByProduct?.[priceId] || 0;
+        if (ownedQty > 0) {
+          openCart();
+          return;
+        }
+
+        // Si no lo posee aún, agregar 1 unidad al carrito
         const currentQty = cartQuantities[priceId] || 0;
         setQty(priceId, currentQty + 1);
         openCart();
@@ -264,21 +275,32 @@ const Home = () => {
                 product.coursesCount !== null
                   ? Number(product.coursesCount)
                   : parseInt(product.name, 10) || 0,
-              priceId: product.stripeId,
+              // priceId: usamos el id de precio de Stripe si está disponible
+              // En la API viene como price_id (snake_case)
+              priceId: product.price_id || product.priceId || product.stripeId,
               // "Most Popular" para el plan cuyo nombre sea exactamente "3 Courses"
               isPopular: String(product.name).trim() === "3 Courses",
             };
           })
       : [];
 
-  // Solo considerar currentPlan si tenemos un límite de plan válido (> 0)
-  const currentPlan =
-    Number(planLimit) > 0
-      ? plans.find((plan) => Number(plan.limit) === Number(planLimit))
-      : null;
-  const currentPlanTitle = currentPlan
-    ? currentPlan.title?.defaultMessage || currentPlan.title
-    : "";
+  // Lista de product_ids/stripeIds de todos los productos con cantidad > 0
+  const activeProductIds = packsByProduct
+    ? Object.entries(packsByProduct)
+        .filter(([, qty]) => Number(qty) > 0)
+        .map(([key]) => key)
+    : [];
+
+  // Debug: verificar qué product_ids están activos y cómo se mapean a los planes
+  console.log("activeProductIds >>>", activeProductIds);
+  console.log(
+    "plans stripeIds >>>",
+    plans.map((p) => ({
+      id: p.id,
+      name: p.title?.defaultMessage || p.title,
+      stripeId: p.stripeId,
+    }))
+  );
 
   // Ordenar productos para el modal (por número en el nombre: 1, 3, 10)
   const productsSorted = (products || []).slice().sort((a, b) => {
@@ -299,7 +321,7 @@ const Home = () => {
         {plans && plans.length > 0 ? (
           <PlanCardList
             plans={plans}
-            currentPlan={currentPlan}
+            activeProductIds={activeProductIds}
             onPlanSelect={handlePlanSelect}
           />
         ) : (

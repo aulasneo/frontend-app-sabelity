@@ -1,17 +1,29 @@
 import React from "react";
 import { useIntl } from "react-intl";
+import { useSubscriptions } from "../../../../contexts/SubscriptionsContext";
 import "./HeaderInventory.css";
 import messages from "../messages";
 
 const HeaderInventory = ({
   userInventory,
+  computedCurrentTotalCourses,
 }) => {
   const intl = useIntl();
+  const { totalCoursesFromSubscriptions } = useSubscriptions() || {};
 
   if (!userInventory) return null;
 
-  const total = Number(userInventory.totalCourses || 0);
+  // Usar el mayor valor entre:
+  // - el total derivado de las suscripciones que llega por props (Profile)
+  // - el total derivado del contexto
+  // - el total que reporta el inventario del backend
+  const overrideTotal = Number(computedCurrentTotalCourses ?? 0);
+  const computedTotalFromSubs = Number(totalCoursesFromSubscriptions || 0);
+  const backendTotal = Number(userInventory.totalCourses || 0);
+  const total = Math.max(backendTotal, computedTotalFromSubs, overrideTotal);
+
   const used = Number(userInventory.assignedCoursesCount || 0);
+  const available = Math.max(0, total - used);
   const pct = total > 0 ? Math.min(100, Math.round((used / total) * 100)) : 0;
 
   return (
@@ -19,7 +31,7 @@ const HeaderInventory = ({
       <div className="inventory-stats">
         <div className="inventory-stat">
           <strong>{intl.formatMessage(messages.totalCourses)}:</strong>{" "}
-          {userInventory.totalCourses}
+          {total}
         </div>
         <div className="inventory-stat">
           <strong>{intl.formatMessage(messages.usedCourses)}:</strong>{" "}
@@ -27,11 +39,11 @@ const HeaderInventory = ({
         </div>
         <div
           className={`inventory-stat inventory-available ${
-            userInventory.availableCourses > 0 ? "ok" : "no-courses"
+            available > 0 ? "ok" : "no-courses"
           }`}
         >
           <strong>{intl.formatMessage(messages.availableCourses)}:</strong>{" "}
-          {userInventory.availableCourses}
+          {available}
         </div>
       </div>
 
@@ -52,7 +64,7 @@ const HeaderInventory = ({
         </div>
       </div>
 
-      {userInventory.availableCourses === 0 && (
+      {available === 0 && (
         <div className="inventory-warning">
           ⚠️ {intl.formatMessage(messages.limitReachedWarning)}
         </div>

@@ -174,6 +174,7 @@ const ProfileInner = () => {
             userInventory={userInventory}
             currentSubscription={currentSubscription}
             isCancelling={isCancelling}
+            computedCurrentTotalCourses={currentTotalsFromSubs.totalCourses}
           />
         )}
              

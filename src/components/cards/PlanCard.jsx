@@ -11,32 +11,27 @@ const PlanCard = ({
   description,
   price,
   className,
-  /* isDisabled, */
   onPlanSelect,
-  isPopular = false,
+  isCurrentPlan = false,
 }) => {
   const intl = useIntl();
 
+  // Asegura que la descripción siempre sea un string seguro
+  const safeDescription = typeof description === 'string' ? description : '';
+
   const handleClick = () => {
     if (onPlanSelect) {
-      onPlanSelect({
-        id: 'price_1OcYr0Lvx3g2W5Lp5X5X5X5X', // Reemplaza con el ID correcto del precio de Stripe
-        name: title,
-        price: price,
-        // Agrega cualquier otra propiedad que necesites
-      });
+      // Delega al padre la lógica de usar el plan seleccionado (incluido su priceId)
+      onPlanSelect();
     }
   };
 
   return (
-    <div className={`plan-card ${className} ${isPopular ? 'popular' : ''}`}>
-      {isPopular && (
-        <div className="popular-badge">
-          {intl.formatMessage(messages.mostPopular || { id: 'planCard.mostPopular.fallback', defaultMessage: 'Most Popular' })}
-        </div>
-      )}
+    <div className={`plan-card ${className}`}>
       <h2>{title}</h2>
-      <p className="card-description">{description}</p>
+      {safeDescription && (
+        <p className="card-description">{safeDescription}</p>
+      )}
       <div className="card-price-content">
         <span className="card-price">{price}</span>
         <span className="card-mouth">
@@ -47,10 +42,9 @@ const PlanCard = ({
           onClick={handleClick}
           variant="primary"
           className="full-width"
-          messageId="upgrade.plan.button.text"
-          defaultMessage="Suscribe"
+          messageId={isCurrentPlan ? 'change.plan.button.text' : 'upgrade.plan.button.text'}
+          defaultMessage={isCurrentPlan ? 'Change' : 'Suscribe'}
         />
-      {/* )} */}
     </div>
   );
 };
@@ -61,13 +55,7 @@ PlanCard.propTypes = {
   price: PropTypes.string.isRequired,
   onPlanSelect: PropTypes.func.isRequired,
   className: PropTypes.string.isRequired,
-  /* isDisabled: PropTypes.bool, */
-  isPopular: PropTypes.bool,
-};
-
-PlanCard.defaultProps = {
-  /* isDisabled: false, */
-  isPopular: false,
+  isCurrentPlan: PropTypes.bool,
 };
 
 export default PlanCard;
