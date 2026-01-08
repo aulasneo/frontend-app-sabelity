@@ -291,17 +291,6 @@ const Home = () => {
         .map(([key]) => key)
     : [];
 
-  // Debug: verificar qué product_ids están activos y cómo se mapean a los planes
-  console.log("activeProductIds >>>", activeProductIds);
-  console.log(
-    "plans stripeIds >>>",
-    plans.map((p) => ({
-      id: p.id,
-      name: p.title?.defaultMessage || p.title,
-      stripeId: p.stripeId,
-    }))
-  );
-
   // Ordenar productos para el modal (por número en el nombre: 1, 3, 10)
   const productsSorted = (products || []).slice().sort((a, b) => {
     const na = parseInt(a?.name, 10) || 0;

@@ -40,7 +40,7 @@ const PlanCard = ({
       </div>
         <Button
           onClick={handleClick}
-          variant="primary"
+          variant={isCurrentPlan ? 'outline' : 'primary'}
           className="full-width"
           messageId={isCurrentPlan ? 'change.plan.button.text' : 'upgrade.plan.button.text'}
           defaultMessage={isCurrentPlan ? 'Change' : 'Suscribe'}
