@@ -3,7 +3,7 @@ import { useIntl } from "react-intl";
 import { useBilling } from "../../contexts/BillingContext";
 import "./billing.css";
 
-const UpcomingInvoicePanel = ({ subscriptionId }) => {
+const UpcomingInvoicePanel = ({ subscriptionId, page = 0, pageSize = 10 }) => {
   const intl = useIntl();
   const {
     upcomingInvoice,
@@ -12,19 +12,10 @@ const UpcomingInvoicePanel = ({ subscriptionId }) => {
     fetchUpcomingInvoiceForSubscription,
   } = useBilling() || {};
 
-  // Pagination state (must be declared before any early returns)
-  const [page, setPage] = useState(0);
-  const pageSize = 10;
-
   useEffect(() => {
     if (!subscriptionId || !fetchUpcomingInvoiceForSubscription) return;
     fetchUpcomingInvoiceForSubscription(subscriptionId);
   }, [subscriptionId, fetchUpcomingInvoiceForSubscription]);
-
-  // Reset pagination when subscription or invoice changes
-  useEffect(() => {
-    setPage(0);
-  }, [subscriptionId, upcomingInvoice]);
 
   if (!subscriptionId) {
     return null;
@@ -63,7 +54,7 @@ const UpcomingInvoicePanel = ({ subscriptionId }) => {
     );
   }
 
-  const { currency, total, subtotal, lines = [] } = upcomingInvoice;
+  const { currency, total, lines = [] } = upcomingInvoice;
 
   const totalPages = Math.max(1, Math.ceil(lines.length / pageSize));
   const currentPage = Math.min(page, totalPages - 1);
@@ -95,7 +86,7 @@ const UpcomingInvoicePanel = ({ subscriptionId }) => {
   };
 
   return (
-    <section className="billing-upcoming-section">
+    <section className="billing-card">
       <h4 className="billing-upcoming-title">
         {intl.formatMessage({
           id: "billing.upcoming.title",
@@ -168,54 +159,7 @@ const UpcomingInvoicePanel = ({ subscriptionId }) => {
         </table>
       </div>
 
-      {Array.isArray(lines) && lines.length > pageSize && (
-        <div className="billing-upcoming-pagination">
-          <button
-            type="button"
-            className="billing-upcoming-page-btn"
-            onClick={() => setPage((p) => Math.max(0, p - 1))}
-            disabled={currentPage === 0}
-          >
-            {intl.formatMessage({
-              id: "billing.upcoming.prev",
-              defaultMessage: "Previous",
-            })}
-          </button>
-          <span className="billing-upcoming-page-info">
-            {intl.formatMessage(
-              {
-                id: "billing.upcoming.pageInfo",
-                defaultMessage: "Page {current} of {total}",
-              },
-              { current: currentPage + 1, total: totalPages }
-            )}
-          </span>
-          <button
-            type="button"
-            className="billing-upcoming-page-btn"
-            onClick={() =>
-              setPage((p) =>
-                Math.min(totalPages - 1, p + 1)
-              )
-            }
-            disabled={currentPage >= totalPages - 1}
-          >
-            {intl.formatMessage({
-              id: "billing.upcoming.next",
-              defaultMessage: "Next",
-            })}
-          </button>
-        </div>
-      )}
-
       <div className="billing-upcoming-summary">
-        <span>
-          {intl.formatMessage({
-            id: "billing.upcoming.subtotal",
-            defaultMessage: "Subtotal:",
-          })}{" "}
-          <strong>{fmtAmount(subtotal)}</strong>
-        </span>
         <span>
           {intl.formatMessage({
             id: "billing.upcoming.total",

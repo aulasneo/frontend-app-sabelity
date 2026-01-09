@@ -9,6 +9,7 @@ export function useHomeCart({
   setErrorModalOpen,
   currentCourses,
   currentTotal,
+  ownedQuantities = {},
 }) {
   const [showCart, setShowCart] = useState(false);
   const [cartSummary, setCartSummary] = useState(null);
@@ -41,13 +42,25 @@ export function useHomeCart({
   }, []);
 
   const incQty = useCallback(
-    (priceId) => setQty(priceId, (cartQuantities[priceId] || 0) + 1),
-    [cartQuantities, setQty]
+    (priceId) => {
+      const base =
+        cartQuantities[priceId] != null
+          ? cartQuantities[priceId]
+          : ownedQuantities[priceId] || 0;
+      setQty(priceId, (Number(base) || 0) + 1);
+    },
+    [cartQuantities, ownedQuantities, setQty]
   );
 
   const decQty = useCallback(
-    (priceId) => setQty(priceId, (cartQuantities[priceId] || 0) - 1),
-    [cartQuantities, setQty]
+    (priceId) => {
+      const base =
+        cartQuantities[priceId] != null
+          ? cartQuantities[priceId]
+          : ownedQuantities[priceId] || 0;
+      setQty(priceId, (Number(base) || 0) - 1);
+    },
+    [cartQuantities, ownedQuantities, setQty]
   );
 
   const getPriceNumber = useCallback((amountStr) => {
@@ -58,18 +71,28 @@ export function useHomeCart({
 
   const totalItems = useMemo(
     () =>
-      Object.values(cartQuantities).reduce(
-        (acc, q) => acc + (Number(q) || 0),
-        0
-      ),
-    [cartQuantities]
+      Object.entries(cartQuantities).reduce((acc, [priceId, q]) => {
+        const target = Number(q) || 0;
+        const owned = Number(ownedQuantities[priceId] || 0);
+        const delta = target - owned;
+        // Solo contamos compras adicionales por encima de lo ya poseído
+        return acc + Math.max(delta, 0);
+      }, 0),
+    [cartQuantities, ownedQuantities]
   );
 
   const handleCartCheckout = useCallback(async () => {
     try {
       const items = Object.entries(cartQuantities)
-        .filter(([, q]) => (q || 0) > 0)
-        .map(([priceId, quantity]) => ({ planType: priceId, quantity }));
+        .map(([priceId, quantity]) => {
+          const target = Number(quantity) || 0;
+          const owned = Number(ownedQuantities[priceId] || 0);
+          const delta = target - owned;
+          return { priceId, delta };
+        })
+        // Solo enviar compras adicionales (delta > 0)
+        .filter(({ delta }) => delta > 0)
+        .map(({ priceId, delta }) => ({ planType: priceId, quantity: delta }));
       if (!items.length) {
         alert(
           intl.formatMessage(

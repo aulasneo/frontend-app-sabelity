@@ -35,6 +35,8 @@ const ProfileInner = () => {
   const [summaryChangesCourses, setSummaryChangesCourses] = useState(0);
   const [hasChanges, setHasChanges] = useState(false);
   const [latestQuantitiesByProduct, setLatestQuantitiesByProduct] = useState({});
+  // Forzar el remount de SubscriptionsManager cuando queramos descartar cambios en Profile
+  const [subsManagerKey, setSubsManagerKey] = useState(0);
 
   const currentTotalsFromSubs = computeCurrentTotalsFromSubs(
     subsRaw,
@@ -66,6 +68,7 @@ const ProfileInner = () => {
       const subscriptionId = currentSubscription.id;
 
       const ops = [];
+      const newItems = [];
 
       Object.keys(desired).forEach((priceId) => {
         const currentQty = base[priceId] || 0;
@@ -73,18 +76,72 @@ const ProfileInner = () => {
         const diff = nextQty - currentQty;
         if (!diff) return;
 
-        ops.push(addOrUpdateProduct(subscriptionId, priceId, diff));
+        // Si el usuario ya tiene este producto (currentQty > 0), usamos addOrUpdateProduct
+        if (currentQty > 0) {
+          ops.push(addOrUpdateProduct(subscriptionId, priceId, diff));
+        } else if (nextQty > 0) {
+          // Producto nuevo (no presente en la suscripción actual): ir por checkout.
+          // Para este endpoint el backend espera el ID de PRODUCTO de Stripe
+          // (stripe_id, "prod_...") como plan_type.
+          const product = (products || []).find((p) => {
+            const pPriceId = p.price_id || p.priceId;
+            const pStripeId = p.stripeId;
+            const candidates = [pPriceId, pStripeId, p.id, p.productId].filter(Boolean);
+            return candidates.includes(priceId);
+          });
+
+          const planType =
+            product?.stripeId ||
+            (product?.id && String(product.id).startsWith("prod_")
+              ? product.id
+              : null) ||
+            product?.productId ||
+            product?.product ||
+            product?.price_id ||
+            product?.priceId ||
+            priceId;
+
+          newItems.push({ planType, quantity: nextQty });
+        }
       });
 
-      if (!ops.length) {
-        closeCart();
+      if (!ops.length && !newItems.length) {
+        setConfirmChangesOpen(false);
         return;
       }
 
-      await Promise.all(ops);
+      // 1) Aplicar primero updates sobre productos ya existentes
+      if (ops.length) {
+        await Promise.all(ops);
+      }
+
+      // 2) Si hay productos nuevos y tenemos startMultiCheckout disponible, iniciar checkout
+      if (newItems.length && startMultiCheckout) {
+        const resp = await startMultiCheckout({
+          items: newItems,
+          billingCycle: "month",
+        });
+
+        const redirectUrl = resp?.url || resp?.checkout_url;
+        if (!redirectUrl) {
+          throw new Error("Checkout created but no URL was returned.");
+        }
+
+        // Redirigir a Stripe; el resto del flujo (refreshAll, etc.) ocurrirá al volver
+        window.location.href = redirectUrl;
+        return;
+      }
       try {
         await refreshAll();
       } catch (e) {}
+
+      // Tras aplicar correctamente, reiniciar el estado de cambios y forzar
+      // que SubscriptionsManager se monte de nuevo con los datos actualizados.
+      setSummaryChangesMoney(0);
+      setSummaryChangesCourses(0);
+      setLatestQuantitiesByProduct({});
+      setHasChanges(false);
+      setSubsManagerKey((k) => k + 1);
 
       setSuccessModalMessage(
         intl.formatMessage(
@@ -163,6 +220,17 @@ const ProfileInner = () => {
     setConfirmChangesOpen(true);
   };
 
+  // Cancelar desde el modal de confirmación: descartar cambios en la UI y
+  // volver a mostrar únicamente las cantidades efectivamente compradas.
+  const handleCancelProfileChanges = () => {
+    setConfirmChangesOpen(false);
+    setSummaryChangesMoney(0);
+    setSummaryChangesCourses(0);
+    setLatestQuantitiesByProduct({});
+    setHasChanges(false);
+    setSubsManagerKey((k) => k + 1);
+  };
+
   return (
     <main>
       <div className="content-home">
@@ -179,6 +247,7 @@ const ProfileInner = () => {
         )}
              
         <SubscriptionsManager
+          key={subsManagerKey}
           onSummaryChange={(
             { moneyDelta = 0, coursesDelta = 0, quantitiesByProduct = {} } = {}
           ) => {
@@ -239,7 +308,7 @@ const ProfileInner = () => {
         <ProfileConfirmChangesModal
           intl={intl}
           isOpen={confirmChangesOpen}
-          onClose={() => setConfirmChangesOpen(false)}
+          onClose={handleCancelProfileChanges}
           onConfirm={applyProfileCartChanges}
           currentTotal={currentTotalsFromSubs.totalAmount}
           changesMoney={summaryChangesMoney}

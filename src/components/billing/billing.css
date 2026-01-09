@@ -11,7 +11,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 16px;
+  margin: 1rem;
 }
 
 .billing-history-button {
@@ -37,6 +37,8 @@
 .billing-upcoming-title {
   color: #062b60;
   margin-bottom: 12px;
+  font-size: 1.25rem;
+  font-weight: 700;
 }
 
 .billing-upcoming-table-wrapper {

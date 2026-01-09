@@ -159,6 +159,61 @@ const messages = {
     defaultMessage: 'View payment history',
     description: 'Button to navigate to billing history page',
   },
+  billingDataError: {
+    id: 'billing.data.error',
+    defaultMessage: 'There was an error loading billing data.',
+    description: 'Error loading billing data on main Billing page',
+  },
+  planLabel: {
+    id: 'billing.subscription.plan',
+    defaultMessage: 'Plan',
+    description: 'Label for current subscription plan',
+  },
+  planUnknown: {
+    id: 'billing.subscription.plan.unknown',
+    defaultMessage: 'Unknown',
+    description: 'Fallback label when plan name is unknown',
+  },
+  upcomingTitle: {
+    id: 'billing.upcoming.title',
+    defaultMessage: 'Upcoming invoice',
+    description: 'Upcoming invoice section title',
+  },
+  upcomingLoading: {
+    id: 'billing.upcoming.loading',
+    defaultMessage: 'Loading upcoming invoice...',
+    description: 'Loading upcoming invoice message',
+  },
+  upcomingError: {
+    id: 'billing.upcoming.error',
+    defaultMessage: 'There was an error loading the upcoming invoice.',
+    description: 'Error loading upcoming invoice',
+  },
+  upcomingEmptyLines: {
+    id: 'billing.upcoming.empty',
+    defaultMessage: 'No upcoming invoice lines.',
+    description: 'Shown when upcoming invoice has no lines',
+  },
+  upcomingColDescription: {
+    id: 'billing.upcoming.col.description',
+    defaultMessage: 'Description',
+    description: 'Upcoming invoice column: description',
+  },
+  upcomingColQuantity: {
+    id: 'billing.upcoming.col.quantity',
+    defaultMessage: 'Qty',
+    description: 'Upcoming invoice column: quantity',
+  },
+  upcomingColAmount: {
+    id: 'billing.upcoming.col.amount',
+    defaultMessage: 'Amount',
+    description: 'Upcoming invoice column: amount',
+  },
+  upcomingTotalLabel: {
+    id: 'billing.upcoming.total',
+    defaultMessage: 'Total:',
+    description: 'Label for upcoming invoice total amount',
+  },
 };
 
 export default messages;

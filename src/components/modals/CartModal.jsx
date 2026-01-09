@@ -21,6 +21,7 @@ const CartModal = ({
   countsById = {},
   ownedQuantities = {},
   cartSummary = null,
+  hasNewProducts = false,
 }) => {
   const fm = (desc, fallback = "") => {
     if (!desc) return fallback;
@@ -46,7 +47,13 @@ const CartModal = ({
           <>
             <div className="cart-list">
               {products.map((p) => {
-                const qty = (p.qty != null ? p.qty : (cartQuantities[p.stripeId] || 0));
+                const qty = (
+                  p.qty != null
+                    ? p.qty
+                    : (cartQuantities[p.stripeId] != null
+                        ? cartQuantities[p.stripeId]
+                        : (ownedQuantities[p.stripeId] || 0))
+                );
                 const unit = Number(unitsById[p.stripeId] != null ? unitsById[p.stripeId] : 0);
                 const perPkg = Number(countsById[p.stripeId] != null ? countsById[p.stripeId] : 0);
                 const lineTotal = unit * (Number(qty) || 0);
@@ -184,8 +191,12 @@ const CartModal = ({
         {/* Updates list intentionally hidden: quantities are controlled only via the products above */}
       </ModalDialog.Body>
       <ModalDialog.Footer>
-        {totalItems > 0 ? (
-          <Button variant="primary" onClick={onCheckout} disabled={totalItems === 0}>
+        {hasNewProducts ? (
+          <Button
+            variant="primary"
+            onClick={onCheckout}
+            disabled={totalItems === 0}
+          >
             {fm(messages.checkoutButton, "Checkout")}
           </Button>
         ) : (

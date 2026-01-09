@@ -5,14 +5,18 @@ import Button from "../buttons/Button";
 import messages from "./messages";
 import UpcomingInvoicePanel from "./UpcomingInvoicePanel";
 import { useSubscriptions } from "../../contexts/SubscriptionsContext";
+import { useBilling } from "../../contexts/BillingContext";
 import "./billing.css";
 
 const Billing = () => {
   const intl = useIntl();
   const navigate = useNavigate();
   const { subsRaw, loading } = useSubscriptions() || {};
+  const { upcomingInvoice } = useBilling() || {};
   const [error, setError] = useState("");
   const [subscription, setSubscription] = useState(null);
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
   // Eliminado: invoices (no hay endpoint en backend)
 
   useEffect(() => {
@@ -22,10 +26,24 @@ const Billing = () => {
         : null;
       setSubscription(active || null);
     } catch (e) {
-      setError(e?.message || "Error while loading billing data");
+      setError(e?.message || intl.formatMessage(messages.billingDataError));
       setSubscription(null);
     }
   }, [subsRaw]);
+
+  // Resetear página cuando cambie la suscripción o la upcomingInvoice
+  useEffect(() => {
+    setPage(1);
+  }, [subscription, upcomingInvoice]);
+
+  const upcomingLines = Array.isArray(upcomingInvoice?.lines)
+    ? upcomingInvoice.lines
+    : [];
+  const totalPages = Math.max(1, Math.ceil(upcomingLines.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+
+  const goToPrev = () => setPage((prev) => Math.max(1, prev - 1));
+  const goToNext = () => setPage((prev) => Math.min(totalPages, prev + 1));
 
   const parseToLocalDate = (val) => {
     if (!val && val !== 0) return null;
@@ -75,56 +93,71 @@ const Billing = () => {
           />
         </div>
 
-        {loading && <div>Loading...</div>}
+        {loading && (
+          <div className="billing-text-muted">
+            {intl.formatMessage(messages.loading)}
+          </div>
+        )}
         {error && <div className="billing-error">{error}</div>}
 
-        {/* Estado de suscripción con fechas de periodo */}
-        <div className="billing-card">
+        {/* Estado de suscripción con fechas de periodo + upcoming invoice */}
+        <div>
           {subscription ? (
             <>
-              <div className="billing-text-muted">
-                <strong>{intl.formatMessage(messages.status)}:</strong>{" "}
-                {subscription.status}
+              <div className="billing-card">
+                <div className="billing-text-muted">
+                  <strong>{intl.formatMessage(messages.status)}:</strong>{" "}
+                  {subscription.status}
+                </div>
+                {(() => {
+                  // Extraer items del plan
+                  const items = subscription?.items?.data || [];
+                  if (items.length > 0) {
+                    return (
+                      <div className="billing-text-muted billing-mt-6">
+                        <strong>
+                          {intl.formatMessage(messages.planLabel)}:
+                        </strong>{" "}
+                        {items.map((item, idx) => {
+                          const name =
+                            item?.price?.product?.name ||
+                            item?.plan?.name ||
+                            intl.formatMessage(messages.planUnknown);
+                          const qty = item?.quantity || 1;
+                          return (
+                            <span key={idx}>
+                              {name} {qty > 1 ? `(x${qty})` : ""}
+                              {idx < items.length - 1 ? ", " : ""}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+                {currentPeriodStartLocal && (
+                  <div className="billing-text-muted billing-mt-6">
+                    <strong>
+                      {intl.formatMessage(messages.currentPeriodStart)}:
+                    </strong>{" "}
+                    {currentPeriodStartLocal}
+                  </div>
+                )}
+                {nextBillingLocal && (
+                  <div className="billing-text-muted billing-mt-6">
+                    <strong>{intl.formatMessage(messages.nextBilling)}:</strong>{" "}
+                    {nextBillingLocal}
+                  </div>
+                )}
               </div>
-              {(() => {
-                // Extraer items del plan
-                const items = subscription?.items?.data || [];
-                if (items.length > 0) {
-                  return (
-                    <div className="billing-text-muted billing-mt-6">
-                      <strong>Plan:</strong>{" "}
-                      {items.map((item, idx) => {
-                        const name = item?.price?.product?.name || item?.plan?.name || "Unknown";
-                        const qty = item?.quantity || 1;
-                        return (
-                          <span key={idx}>
-                            {name} {qty > 1 ? `(x${qty})` : ""}
-                            {idx < items.length - 1 ? ", " : ""}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  );
-                }
-                return null;
-              })()}
-              {currentPeriodStartLocal && (
-                <div className="billing-text-muted billing-mt-6">
-                  <strong>
-                    {intl.formatMessage(messages.currentPeriodStart)}:
-                  </strong>{" "}
-                  {currentPeriodStartLocal}
-                </div>
-              )}
-              {nextBillingLocal && (
-                <div className="billing-text-muted billing-mt-6">
-                  <strong>{intl.formatMessage(messages.nextBilling)}:</strong>{" "}
-                  {nextBillingLocal}
-                </div>
-              )}
 
-              {/* Upcoming invoice details */}
-              <UpcomingInvoicePanel subscriptionId={subscription?.id} />
+              {/* Upcoming invoice details (solo el contenido de la página actual) */}
+              <UpcomingInvoicePanel
+                subscriptionId={subscription?.id}
+                page={currentPage - 1}
+                pageSize={pageSize}
+              />
             </>
           ) : (
             <div className="billing-text-muted">
@@ -132,6 +165,43 @@ const Billing = () => {
             </div>
           )}
         </div>
+
+        {/* Paginación del upcoming invoice fuera del recuadro, centrada */}
+        {upcomingLines.length > 0 && (
+          <div className="billing-history-pagination-wrapper">
+            <div className="billing-history-pagination">
+              <Button
+                onClick={goToPrev}
+                variant="outline"
+                className="billing-page-button"
+                disabled={currentPage <= 1}
+              >
+                {"<"}
+              </Button>
+              <Button
+                variant="primary"
+                className="billing-page-button billing-page-current"
+                disabled
+              >
+                {currentPage}
+              </Button>
+              <Button
+                onClick={goToNext}
+                variant="outline"
+                className="billing-page-button"
+                disabled={currentPage >= totalPages}
+              >
+                {">"}
+              </Button>
+            </div>
+            <div className="billing-page-info">
+              {intl.formatMessage(messages.billingHistoryPaginationPageOf, {
+                page: currentPage,
+                total: totalPages,
+              })}
+            </div>
+          </div>
+        )}
       </div>
     </main>
   );

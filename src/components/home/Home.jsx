@@ -15,6 +15,7 @@ import PlanLimitModal from "../modals/PlanLimitModal";
 import ErrorModal from "../modals/ErrorModal";
 import ConfirmCancelSubscriptionModal from "../modals/ConfirmCancelSubscriptionModal";
 import SuccessModal from "../modals/SuccessModal";
+import { addOrUpdateProduct } from "../../data/service";
 
 const Home = () => {
   const intl = useIntl();
@@ -23,6 +24,7 @@ const Home = () => {
     products: ctxProducts,
     subsRaw,
     packsByProduct,
+    refreshAll,
   } = useSubscriptions() || {};
   const {
     courses,
@@ -46,6 +48,7 @@ const Home = () => {
   const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [successModalMessage, setSuccessModalMessage] = useState("");
+  const [selectedProductId, setSelectedProductId] = useState(null);
 
   // Lógica del carrito extraída a un helper dedicado: totales actuales
   // reales desde las suscripciones del backend y el catálogo de productos.
@@ -72,6 +75,7 @@ const Home = () => {
     setErrorModalOpen,
     currentCourses: currentTotalsFromSubs.totalCourses,
     currentTotal: currentTotalsFromSubs.totalAmount,
+    ownedQuantities: packsByProduct || {},
   });
 
   // Sincronizar inventory (solo para planLimit) y catálogo desde el contexto global cuando esté disponible
@@ -100,6 +104,70 @@ const Home = () => {
       setCurrentSubscription(null);
     }
   }, [subsRaw]);
+
+  // Aplicar cambios de cantidades sin crear checkout (caso solo bajas o ajustes),
+  // usando el mismo flujo que Profile: addOrUpdateProduct con deltas.
+  const handleApplyCartUpdates = async () => {
+    if (!currentSubscription?.id) return;
+
+    try {
+      const base = packsByProduct || {};
+      const desiredMap = { ...base };
+
+      // Construir cantidades "deseadas" a partir del carrito; si un producto no
+      // está en cartQuantities, asumimos que se mantiene en su cantidad base.
+      Object.entries(cartQuantities || {}).forEach(([priceId, qty]) => {
+        const target = Number(qty);
+        if (!Number.isNaN(target) && target >= 0) {
+          desiredMap[priceId] = target;
+        }
+      });
+
+      const subscriptionId = currentSubscription.id;
+      const ops = [];
+
+      Object.keys(desiredMap).forEach((priceId) => {
+        const currentQty = Number(base[priceId] || 0);
+        const nextQty = Number(desiredMap[priceId] ?? currentQty);
+        const diff = nextQty - currentQty; // puede ser positivo o negativo
+        if (!diff) return;
+        ops.push(addOrUpdateProduct(subscriptionId, priceId, diff));
+      });
+
+      if (!ops.length) {
+        closeCart();
+        return;
+      }
+
+      await Promise.all(ops);
+      if (typeof refreshAll === "function") {
+        try {
+          await refreshAll();
+        } catch (e) {}
+      }
+
+      setSuccessModalMessage(
+        intl.formatMessage(
+          messages.updateSubscriptionSuccess || {
+            id: "home.update.subscription.success.fallback",
+            defaultMessage: "Your subscription has been updated.",
+          }
+        )
+      );
+      setSuccessModalOpen(true);
+      closeCart();
+    } catch (error) {
+      console.error("Error applying cart updates from Home:", error);
+      const msg = intl.formatMessage(
+        messages.updateSubscriptionError || {
+          id: "home.update.subscription.error.fallback",
+          defaultMessage: "There was an error updating your subscription.",
+        }
+      );
+      setErrorModalMessage(msg);
+      setErrorModalOpen(true);
+    }
+  };
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -187,6 +255,7 @@ const Home = () => {
         // sin incrementar cantidad automáticamente (caso botón "Change").
         const ownedQty = packsByProduct?.[priceId] || 0;
         if (ownedQty > 0) {
+          setSelectedProductId(priceId);
           openCart();
           return;
         }
@@ -194,6 +263,7 @@ const Home = () => {
         // Si no lo posee aún, agregar 1 unidad al carrito
         const currentQty = cartQuantities[priceId] || 0;
         setQty(priceId, currentQty + 1);
+        setSelectedProductId(priceId);
         openCart();
         return;
       }
@@ -223,6 +293,18 @@ const Home = () => {
   }, [courses]);
 
   const handleCloseModal = () => setShowModal(false);
+
+  const handleOpenCartFromHeader = () => {
+    // Abrir carrito con TODOS los productos visibles
+    setSelectedProductId(null);
+    openCart();
+  };
+
+  const handleCloseCart = () => {
+    // Al cerrar el modal, limpiar selección para el próximo uso
+    setSelectedProductId(null);
+    closeCart();
+  };
 
   // const handleSendEmail = () => {
   //   const email = "info@aulasneo.com";
@@ -298,6 +380,21 @@ const Home = () => {
     return na - nb;
   });
 
+  // Si se seleccionó un producto desde una card, mostrar solo ese en el modal
+  const productsForCart = selectedProductId
+    ? productsSorted.filter((p) => p.stripeId === selectedProductId)
+    : productsSorted;
+
+  // Detectar si en el carrito hay productos NUEVOS (que antes no tenía)
+  // para decidir si corresponde flujo de checkout o solo updates.
+  const hasNewProductsInCart = Object.entries(cartQuantities || {}).some(
+    ([priceId, qty]) => {
+      const target = Number(qty) || 0;
+      const owned = Number((packsByProduct && packsByProduct[priceId]) || 0);
+      return target > 0 && owned === 0;
+    }
+  );
+
   return (
     <>
       <div className="content-home">
@@ -305,7 +402,7 @@ const Home = () => {
           intl={intl}
           messages={messages}
           totalItems={totalItems}
-          onOpenCart={openCart}
+          onOpenCart={handleOpenCartFromHeader}
         />
         {plans && plans.length > 0 ? (
           <PlanCardList
@@ -372,16 +469,19 @@ const Home = () => {
 
       <CartModal
         showCart={showCart}
-        closeCart={closeCart}
+        closeCart={handleCloseCart}
         intl={intl}
         messages={messages}
-        products={productsSorted}
+        products={productsForCart}
         cartQuantities={cartQuantities}
         setQty={setQty}
         incQty={incQty}
         decQty={decQty}
         totalItems={totalItems}
         onCheckout={handleCartCheckout}
+        onApplyUpdates={handleApplyCartUpdates}
+        ownedQuantities={packsByProduct || {}}
+        hasNewProducts={hasNewProductsInCart}
         cartSummary={cartSummary}
       />
     </>
