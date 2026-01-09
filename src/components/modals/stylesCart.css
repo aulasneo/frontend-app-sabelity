@@ -122,3 +122,40 @@
   color: #062b60;
   font-weight: 700;
 }
+
+/* Summary grid (courses / money columns) */
+.cart-summary-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: flex-start;
+  margin-top: 12px;
+}
+
+.cart-summary-col {
+  color: #6b7280; /* gray-500 */
+}
+
+.cart-summary-col-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Downgrade blocked modal body */
+.subs-downgrade-blocked {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 3rem;    /* separa más el texto del header */
+  margin-bottom: 1.5rem; /* separa un poco más del botón del footer */
+}
+
+.subs-downgrade-main-text {
+  color: #111827;
+}
+
+.subs-downgrade-details {
+  color: #6b7280;
+  font-size: 0.9rem;
+}

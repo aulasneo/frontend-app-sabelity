@@ -13,6 +13,7 @@ import ConfirmCancelSubscriptionModal from "../modals/ConfirmCancelSubscriptionM
 import SuccessModal from "../modals/SuccessModal";
 import ErrorModal from "../modals/ErrorModal";
 import ProfileConfirmChangesModal from "../modals/ProfileConfirmChangesModal";
+import DowngradeBlockedModal from "../modals/DowngradeBlockedModal";
 import { cancelSubscription, addOrUpdateProduct } from "../../data/service";
 import { useSubscriptions } from "../../contexts/SubscriptionsContext";
 import "./profile.css";
@@ -37,6 +38,8 @@ const ProfileInner = () => {
   const [latestQuantitiesByProduct, setLatestQuantitiesByProduct] = useState({});
   // Forzar el remount de SubscriptionsManager cuando queramos descartar cambios en Profile
   const [subsManagerKey, setSubsManagerKey] = useState(0);
+  const [blockDowngradeModalOpen, setBlockDowngradeModalOpen] = useState(false);
+  const [blockReason, setBlockReason] = useState("downgrade"); // "downgrade" | "cancel"
 
   const currentTotalsFromSubs = computeCurrentTotalsFromSubs(
     subsRaw,
@@ -54,8 +57,31 @@ const ProfileInner = () => {
     }
   }, [inventory, subsRaw]);
 
+  const getCoursesInUse = () => {
+    const inv = userInventory || inventory || {};
+    return (
+      inv.assignedCoursesCount ??
+      inv.assigned_courses_count ??
+      inv.coursesInUse ??
+      inv.courses_in_use ??
+      0
+    );
+  };
+
   const onCancelSubscription = () => {
     if (!currentSubscription?.id) return;
+
+    const coursesInUse = getCoursesInUse();
+
+    // Si hay cursos en uso, mostrar primero el modal que indica que deben
+    // eliminarse los cursos antes de poder cancelar la suscripción.
+    if (Number(coursesInUse) > 0) {
+      setBlockReason("cancel");
+      setBlockDowngradeModalOpen(true);
+      return;
+    }
+
+    // Si no hay cursos creados, permitir ir al flujo normal de cancelación.
     setConfirmCancelOpen(true);
   };
 
@@ -217,6 +243,18 @@ const ProfileInner = () => {
 
   const handleReviewChanges = () => {
     if (!hasChanges) return;
+
+    const coursesInUse = getCoursesInUse();
+    const targetTotalCourses =
+      (currentTotalsFromSubs?.totalCourses || 0) + (summaryChangesCourses || 0);
+
+    // Si el nuevo plan permite menos cursos que los que ya tengo creados, bloquear downgrade
+    if (targetTotalCourses > 0 && targetTotalCourses < coursesInUse) {
+      setBlockReason("downgrade");
+      setBlockDowngradeModalOpen(true);
+      return;
+    }
+
     setConfirmChangesOpen(true);
   };
 
@@ -256,6 +294,9 @@ const ProfileInner = () => {
             setLatestQuantitiesByProduct(quantitiesByProduct || {});
             setHasChanges(Boolean(moneyDelta || coursesDelta));
           }}
+          currentTotalCourses={currentTotalsFromSubs.totalCourses}
+          coursesInUse={getCoursesInUse()}
+          onBlockedDowngrade={() => setBlockDowngradeModalOpen(true)}
         />
 
         <SubscriptionsFooter
@@ -314,6 +355,22 @@ const ProfileInner = () => {
           changesMoney={summaryChangesMoney}
           currentCourses={currentTotalsFromSubs.totalCourses}
           changesCourses={summaryChangesCourses}
+        />
+
+        <DowngradeBlockedModal
+          intl={intl}
+          isOpen={blockDowngradeModalOpen}
+          onClose={() => setBlockDowngradeModalOpen(false)}
+          titleId="profile.downgrade.blocked.title"
+          messageId="profile.downgrade.blocked.message"
+          closeId="profile.downgrade.blocked.close"
+          planLimit={currentTotalsFromSubs.totalCourses}
+          coursesInUse={getCoursesInUse()}
+          messageDefault={
+            blockReason === "cancel"
+              ? "To cancel your subscription you must first delete all your courses."
+              : undefined
+          }
         />
       </div>
     </main>

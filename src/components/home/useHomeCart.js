@@ -34,7 +34,11 @@ export function useHomeCart({
     setShowCart(true);
   }, [currentCourses, currentTotal]);
 
-  const closeCart = useCallback(() => setShowCart(false), []);
+  const closeCart = useCallback(() => {
+    setShowCart(false);
+    // Al cerrar el carrito, descartar cantidades temporales y volver al estado base
+    setCartQuantities({});
+  }, []);
 
   const setQty = useCallback((priceId, qty) => {
     const q = Math.max(0, parseInt(qty || 0, 10));

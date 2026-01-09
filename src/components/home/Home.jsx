@@ -4,17 +4,17 @@ import HeaderBar from "../header-bar/HeaderBar";
 import PlanCardList from "../cards/plan-card-list/PlanCardList";
 import AditionalInfo from "../aditionalInfo/AditionalInfo";
 import { useIntl } from "@edx/frontend-platform/i18n";
+import { ModalDialog } from "@openedx/paragon";
 import { useSubscriptions } from "../../contexts/SubscriptionsContext";
 import { useBilling } from "../../contexts/BillingContext";
 import { useHomeCart } from "./useHomeCart";
 import "./stylesHome.css";
 import messages from "./messages";
 import { computeCurrentTotalsFromSubs } from "./cartTotals";
-import CancelSubscriptionButton from "../modals/CancelSubscriptionButton";
 import PlanLimitModal from "../modals/PlanLimitModal";
 import ErrorModal from "../modals/ErrorModal";
-import ConfirmCancelSubscriptionModal from "../modals/ConfirmCancelSubscriptionModal";
 import SuccessModal from "../modals/SuccessModal";
+import DowngradeBlockedModal from "../modals/DowngradeBlockedModal";
 import { addOrUpdateProduct } from "../../data/service";
 
 const Home = () => {
@@ -31,7 +31,6 @@ const Home = () => {
     refreshUserAndCourses,
     startCheckout,
     startMultiCheckout,
-    cancelSubscriptionSafe,
   } = useBilling() || {};
 
   const [planLimit, setPlanLimit] = useState();
@@ -41,14 +40,12 @@ const Home = () => {
   const [deleteCourses, setDeleteCourses] = useState();
   const [products, setProducts] = useState([]);
   const [currentSubscription, setCurrentSubscription] = useState(null);
-  const [isCancelling, setIsCancelling] = useState(false);
   const [errorModalOpen, setErrorModalOpen] = useState(false);
   const [errorModalMessage, setErrorModalMessage] = useState("");
-  // Cancel subscription confirm/success modals
-  const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [successModalMessage, setSuccessModalMessage] = useState("");
   const [selectedProductId, setSelectedProductId] = useState(null);
+  const [blockDowngradeModalOpen, setBlockDowngradeModalOpen] = useState(false);
 
   // Lógica del carrito extraída a un helper dedicado: totales actuales
   // reales desde las suscripciones del backend y el catálogo de productos.
@@ -185,65 +182,6 @@ const Home = () => {
 
   // La lógica de carrito (openCart, closeCart, cantidades y checkout) vive en useHomeCart
 
-  const handleCancelSubscription = () => {
-    if (!currentSubscription?.id) return;
-    setConfirmCancelOpen(true);
-  };
-
-  const performCancelSubscription = async () => {
-    // Cancelar todas las suscripciones activas del usuario (no solo la actual)
-    const activeSubs = Array.isArray(subsRaw)
-      ? subsRaw.filter((s) => s?.status === "active")
-      : [];
-
-    if (!activeSubs.length) {
-      setConfirmCancelOpen(false);
-      return;
-    }
-
-    try {
-      setIsCancelling(true);
-      // Cancelar inmediatamente en Stripe (no esperar al final del período)
-      const cancelAtPeriodEnd = false;
-
-      if (cancelSubscriptionSafe) {
-        await Promise.all(
-          activeSubs.map((sub) =>
-            cancelSubscriptionSafe({
-              subscriptionId: sub.id,
-              cancelAtPeriodEnd,
-              reason:
-                "User initiated cancellation from Home (all subscriptions)",
-            })
-          )
-        );
-      }
-      setSuccessModalMessage(
-        intl.formatMessage(
-          messages.cancelSubscriptionSuccess || {
-            id: "home.cancel.subscription.success.fallback",
-            defaultMessage:
-              "Your subscription cancellations have been scheduled.",
-          }
-        )
-      );
-      setSuccessModalOpen(true);
-    } catch (error) {
-      console.error("Error canceling subscription:", error);
-      const msg = intl.formatMessage(
-        messages.cancelSubscriptionError || {
-          id: "home.cancel.subscription.error.fallback",
-          defaultMessage: "There was an error canceling your subscription.",
-        }
-      );
-      setErrorModalMessage(msg);
-      setErrorModalOpen(true);
-    } finally {
-      setIsCancelling(false);
-      setConfirmCancelOpen(false);
-    }
-  };
-
   // Selección de plan: compra directa si no tiene suscripción; si ya tiene, agregar al carrito
   const handlePlanSelect = async (product) => {
     try {
@@ -292,13 +230,22 @@ const Home = () => {
     }
   }, [courses]);
 
+  // Cursos en uso para validar el downgrade.
+  // Usamos la misma fuente que en Profile (assignedCoursesCount del inventory)
+  // y, si no estuviera disponible, caemos al contador del LMS o al total del plan actual.
+  const rawCoursesInUse =
+    ctxInventory?.assignedCoursesCount ??
+    ctxInventory?.assigned_courses_count ??
+    (typeof coursesCount === "number" && !Number.isNaN(coursesCount)
+      ? coursesCount
+      : currentTotalsFromSubs.totalCourses);
+
+  const coursesInUseGuard = Number(rawCoursesInUse) || 0;
+
   const handleCloseModal = () => setShowModal(false);
 
-  const handleOpenCartFromHeader = () => {
-    // Abrir carrito con TODOS los productos visibles
-    setSelectedProductId(null);
-    openCart();
-  };
+  // Nota: el flujo de carrito ya no se abre desde el Header, solo desde las cards
+  // por lo que deshabilitamos el botón de carrito en el HeaderBar.
 
   const handleCloseCart = () => {
     // Al cerrar el modal, limpiar selección para el próximo uso
@@ -401,8 +348,6 @@ const Home = () => {
         <HeaderBar
           intl={intl}
           messages={messages}
-          totalItems={totalItems}
-          onOpenCart={handleOpenCartFromHeader}
         />
         {plans && plans.length > 0 ? (
           <PlanCardList
@@ -417,15 +362,6 @@ const Home = () => {
             {intl.formatMessage(messages.noPlansAvailable)}
           </div>
         )}
-
-        {/* Cancel subscription button placed BELOW subscriptions/inventory */}
-        <CancelSubscriptionButton
-          intl={intl}
-          messages={messages}
-          currentSubscription={currentSubscription}
-          isCancelling={isCancelling}
-          onClick={handleCancelSubscription}
-        />
         <AditionalInfo messages={messages} />
       </div>
 
@@ -449,22 +385,23 @@ const Home = () => {
         onClose={() => setErrorModalOpen(false)}
       />
 
-      {/* Confirm Cancel Subscription Modal */}
-      <ConfirmCancelSubscriptionModal
-        intl={intl}
-        messages={messages}
-        isOpen={confirmCancelOpen}
-        onClose={() => setConfirmCancelOpen(false)}
-        onConfirm={performCancelSubscription}
-        isCancelling={isCancelling}
-      />
-
       {/* Success Modal */}
       <SuccessModal
         intl={intl}
         isOpen={successModalOpen}
         message={successModalMessage}
         onClose={() => setSuccessModalOpen(false)}
+      />
+
+      <DowngradeBlockedModal
+        intl={intl}
+        isOpen={blockDowngradeModalOpen}
+        onClose={() => setBlockDowngradeModalOpen(false)}
+        titleId="home.downgrade.blocked.title"
+        messageId="home.downgrade.blocked.message"
+        closeId="home.downgrade.blocked.close"
+        planLimit={currentTotalsFromSubs.totalCourses}
+        coursesInUse={coursesInUseGuard}
       />
 
       <CartModal
@@ -483,6 +420,8 @@ const Home = () => {
         ownedQuantities={packsByProduct || {}}
         hasNewProducts={hasNewProductsInCart}
         cartSummary={cartSummary}
+        coursesInUse={coursesInUseGuard}
+        onBlockedDowngrade={() => setBlockDowngradeModalOpen(true)}
       />
     </>
   );

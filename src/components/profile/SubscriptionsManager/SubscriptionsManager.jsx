@@ -7,7 +7,12 @@ import SubscriptionsTable from "./SuscriptionsTable/SubscriptionsTable";
 
 // Manager de suscripciones: muestra título, estados y delega la tabla.
 // Los datos de acquired/available y el callback de resumen vienen desde Profile.
-const SubscriptionsManager = ({ onSummaryChange }) => {
+const SubscriptionsManager = ({
+  onSummaryChange,
+  currentTotalCourses,
+  coursesInUse,
+  onBlockedDowngrade,
+}) => {
   const intl = useIntl();
   const { loading, error } = useSubscriptions() || {};
 
@@ -29,6 +34,9 @@ const SubscriptionsManager = ({ onSummaryChange }) => {
         <div className="subs-card">
           <SubscriptionsTable
             onSummaryChange={onSummaryChange}
+            currentTotalCourses={currentTotalCourses}
+            coursesInUse={coursesInUse}
+            onBlockedDowngrade={onBlockedDowngrade}
           />
         </div>
       )}

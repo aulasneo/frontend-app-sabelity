@@ -22,6 +22,8 @@ const CartModal = ({
   ownedQuantities = {},
   cartSummary = null,
   hasNewProducts = false,
+  coursesInUse,
+  onBlockedDowngrade,
 }) => {
   const fm = (desc, fallback = "") => {
     if (!desc) return fallback;
@@ -30,11 +32,117 @@ const CartModal = ({
     }
     return desc.defaultMessage || fallback;
   };
+
+  const handleDecClick = (product) => {
+    const priceId = product.stripeId;
+
+    // Construir cantidades tentativas aplicando el "-1" a este producto
+    const baseQty =
+      cartQuantities[priceId] != null
+        ? cartQuantities[priceId]
+        : ownedQuantities[priceId] || 0;
+    const nextQty = Math.max(0, (Number(baseQty) || 0) - 1);
+
+    const nextQuantities = {
+      ...cartQuantities,
+      [priceId]: nextQty,
+    };
+
+    // Si con esta cantidad quedaríamos por debajo de los cursos en uso, bloquear y no aplicar
+    if (shouldBlockDowngrade(nextQuantities)) {
+      if (typeof onBlockedDowngrade === "function") {
+        try {
+          onBlockedDowngrade();
+        } catch (e) {}
+      }
+      return;
+    }
+
+    // Si el producto define su propio handler, usarlo; si no, usar decQty del hook
+    if (product.onDec) {
+      product.onDec(priceId);
+    } else {
+      decQty(priceId);
+    }
+  };
   const fmtUSD = (n) => {
     const v = Number(n || 0);
     const s = Number.isInteger(v) ? String(v) : v.toFixed(2);
     return `USD $${s.replace(/\.00$/, "")}`;
   };
+
+  const shouldBlockDowngrade = (overrideQuantities) => {
+    try {
+      const {
+        currentCourses,
+        targetCourses,
+      } = computeCartTotals({
+        products,
+        cartQuantities: overrideQuantities || cartQuantities,
+        unitsById,
+        countsById,
+        ownedQuantities,
+        cartSummary,
+      });
+
+      console.log("HOME GUARD", { coursesInUse, currentCourses, targetCourses });
+
+      if (
+        typeof coursesInUse === "number" &&
+        coursesInUse > 0 &&
+        typeof targetCourses === "number" &&
+        targetCourses < coursesInUse
+      ) {
+        return true;
+      }
+    } catch (e) {
+      // si algo falla, no bloqueamos para no romper el flujo
+    }
+    return false;
+  };
+
+  const handleApplyClick = () => {
+    if (shouldBlockDowngrade()) {
+      if (typeof onBlockedDowngrade === "function") {
+        try {
+          onBlockedDowngrade();
+        } catch (e) {}
+      }
+      return;
+    }
+    if (typeof onApplyUpdates === "function") {
+      onApplyUpdates();
+    }
+  };
+  const { changesMoney, changesCourses } = computeCartTotals({
+    products,
+    cartQuantities,
+    unitsById,
+    countsById,
+    ownedQuantities,
+    cartSummary,
+  });
+
+  // Determinar si hay *cualquier* cambio en cantidades respecto de lo que ya posee
+  // el usuario, sin depender de los montos o cursos calculados.
+  const hasChanges = (() => {
+    const allIds = new Set([
+      ...Object.keys(ownedQuantities || {}),
+      ...Object.keys(cartQuantities || {}),
+    ]);
+    for (const id of allIds) {
+      const owned = Number(ownedQuantities?.[id] || 0);
+      const targetRaw =
+        cartQuantities && Object.prototype.hasOwnProperty.call(cartQuantities, id)
+          ? cartQuantities[id]
+          : owned;
+      const target = Number(targetRaw);
+      if (!Number.isNaN(target) && target !== owned) {
+        return true;
+      }
+    }
+    return false;
+  })();
   return (
     <ModalDialog
       isOpen={showCart}
@@ -67,7 +175,12 @@ const CartModal = ({
                       </div>
                     </div>
                     <div className="cart-item-actions">
-                      <button className="qty-btn" onClick={() => (p.onDec ? p.onDec(p.stripeId) : decQty(p.stripeId))}>-</button>
+                      <button
+                        className="qty-btn"
+                        onClick={() => handleDecClick(p)}
+                      >
+                        -
+                      </button>
                       <input
                         className="qty-input"
                         type="number"
@@ -124,61 +237,39 @@ const CartModal = ({
                 : 0;
 
               return (
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr',
-                    gap: 16,
-                    marginTop: 8,
-                    fontSize: 15,
-                    padding: '0px 10px 0 10px',
-                    justifyItems: 'center',
-                  }}
-                >
-                  {/* Columna izquierda: cursos */}
-                  <div
-                    style={{
-                      color: '#6b7280',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 4,
-                    }}
-                  >
-                    <span>
-                      {fm(messages.currentCoursesLabel, "Current courses")}:{' '}
-                      <strong>{currentCourses}</strong>
-                    </span>
-                    <span>
-                      {fm(messages.changesLabel, "Changes")}:{' '}
-                      <strong>{changesCourses >= 0 ? '+' : ''}{changesCourses}</strong>
-                    </span>
-                    <span>
-                      {fm(messages.newCoursesLabel, "New courses")}:{' '}
-                      <strong>{displayNewCourses}</strong>
-                    </span>
+                <div className="cart-summary-header">
+                  <div className="cart-summary-col cart-summary-col-left">
+                    <div className="cart-summary-col-content">
+                      <span>
+                        {fm(messages.currentCoursesLabel, "Current courses")}:{' '}
+                        <strong>{currentCourses}</strong>
+                      </span>
+                      <span>
+                        {fm(messages.changesLabel, "Changes")}:{' '}
+                        <strong>{changesCourses >= 0 ? '+' : ''}{changesCourses}</strong>
+                      </span>
+                      <span>
+                        {fm(messages.newCoursesLabel, "New courses")}:{' '}
+                        <strong>{displayNewCourses}</strong>
+                      </span>
+                    </div>
                   </div>
 
-                  {/* Columna derecha: montos */}
-                  <div
-                    style={{
-                      color: '#6b7280',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 4,
-                    }}
-                  >
-                    <span>
-                      {fm(messages.currentTotalLabel, "Current total")}:{' '}
-                      <strong>{fmtUSD(currentMoney)}</strong>
-                    </span>
-                    <span>
-                      {fm(messages.changesLabel, "Changes")}:{' '}
-                      <strong>{changesMoney >= 0 ? '+' : ''}{fmtUSD(changesMoney)}</strong>
-                    </span>
-                    <span>
-                      {fm(messages.newTotalLabel, "New total")}:{' '}
-                      <strong>{fmtUSD(displayNewMoney)}</strong>
-                    </span>
+                  <div className="cart-summary-col cart-summary-col-right">
+                    <div className="cart-summary-col-content">
+                      <span>
+                        {fm(messages.currentTotalLabel, "Current total")}:{' '}
+                        <strong>{fmtUSD(currentMoney)}</strong>
+                      </span>
+                      <span>
+                        {fm(messages.changesLabel, "Changes")}:{' '}
+                        <strong>{changesMoney >= 0 ? '+' : ''}{fmtUSD(changesMoney)}</strong>
+                      </span>
+                      <span>
+                        {fm(messages.newTotalLabel, "New total")}:{' '}
+                        <strong>{fmtUSD(displayNewMoney)}</strong>
+                      </span>
+                    </div>
                   </div>
                 </div>
               );
@@ -200,7 +291,11 @@ const CartModal = ({
             {fm(messages.checkoutButton, "Checkout")}
           </Button>
         ) : (
-          <Button variant="primary" onClick={onApplyUpdates}>
+          <Button
+            variant="primary"
+            onClick={handleApplyClick}
+            disabled={!hasChanges}
+          >
             {"Apply changes"}
           </Button>
         )}

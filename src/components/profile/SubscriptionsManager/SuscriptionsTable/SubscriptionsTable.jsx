@@ -6,7 +6,12 @@ import "../../../modals/stylesCart.css";
 
 // Tabla de suscripciones: muestra productos comprados (arriba) y disponibles (abajo)
 // con controles +/- para modificar cantidades a nivel UI.
-const SubscriptionsTable = ({ onSummaryChange }) => {
+const SubscriptionsTable = ({
+  onSummaryChange,
+  currentTotalCourses,
+  coursesInUse,
+  onBlockedDowngrade,
+}) => {
   const intl = useIntl();
   const { products = [], packsByProduct = {} } = useSubscriptions() || {};
 
@@ -122,6 +127,40 @@ const SubscriptionsTable = ({ onSummaryChange }) => {
       const next = Math.max(0, current + delta);
       if (next === current) return prev;
       const updated = { ...prev, [key]: next };
+
+      // Calcular el nuevo total de cursos del plan para esta UI
+      let nextCoursesDelta = 0;
+      (products || []).forEach((p) => {
+        const pKey = getProductKey(p);
+        if (!pKey) return;
+        const ownedQty = packsByProduct[pKey] || 0;
+        const uiQty = updated[pKey] ?? ownedQty;
+        const diff = uiQty - ownedQty;
+        if (!diff) return;
+        const coursesPerPack =
+          typeof p.coursesCount === "number"
+            ? p.coursesCount
+            : typeof p.courses_count === "number"
+            ? p.courses_count
+            : 0;
+        nextCoursesDelta += diff * (coursesPerPack || 0);
+      });
+
+      const targetTotal = (currentTotalCourses || 0) + nextCoursesDelta;
+
+      // Si con este cambio quedaríamos por debajo de los cursos en uso (incluyendo 0), bloquear y no aplicar
+      if (
+        typeof coursesInUse === "number" &&
+        coursesInUse > 0 &&
+        targetTotal < coursesInUse &&
+        typeof onBlockedDowngrade === "function"
+      ) {
+        try {
+          onBlockedDowngrade();
+        } catch (e) {}
+        return prev;
+      }
+
       // Recalcular totales a partir de las nuevas cantidades
       recomputeSummaryFromQuantities(updated);
       return updated;

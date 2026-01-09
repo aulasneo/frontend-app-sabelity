@@ -1,9 +1,11 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { getConfig } from "@edx/frontend-platform";
+import { useIntl } from "@edx/frontend-platform/i18n";
 import "./Sidebar.css";
 
 const Sidebar = () => {
+  const intl = useIntl();
   const handleBackToStudio = () => {
     const redirectBackStudio = `${
       getConfig().COURSE_AUTHORING_MICROFRONTEND_URL
@@ -15,13 +17,21 @@ const Sidebar = () => {
 
   return (
     <aside className="app-sidebar" aria-label="Sidebar">
-      <div className="sidebar-header">Menu</div>
+      <div className="sidebar-header">
+        {intl.formatMessage({
+          id: "sidebar.menu",
+          defaultMessage: "Menu",
+        })}
+      </div>
       <nav className="sidebar-nav">
         <NavLink
           to="/"
           className={({ isActive }) => `nav-item${isActive ? " active" : ""}`}
         >
-          <span className="nav-icon" role="img" aria-label="home">
+          <span className="nav-icon" role="img" aria-label={intl.formatMessage({
+            id: "sidebar.home.aria",
+            defaultMessage: "home",
+          })}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -40,13 +50,21 @@ const Sidebar = () => {
               <path d="M9 21V14h6v7"></path>
             </svg>
           </span>
-          <span className="nav-label">Home</span>
+          <span className="nav-label">
+            {intl.formatMessage({
+              id: "sidebar.home.label",
+              defaultMessage: "Home",
+            })}
+          </span>
         </NavLink>
         <NavLink
           to="/profile"
           className={({ isActive }) => `nav-item${isActive ? " active" : ""}`}
         >
-          <span className="nav-icon" role="img" aria-label="profile">
+          <span className="nav-icon" role="img" aria-label={intl.formatMessage({
+            id: "sidebar.profile.aria",
+            defaultMessage: "profile",
+          })}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -64,14 +82,22 @@ const Sidebar = () => {
               <circle cx="12" cy="7" r="4"></circle>
             </svg>
           </span>
-          <span className="nav-label">Profile</span>
+          <span className="nav-label">
+            {intl.formatMessage({
+              id: "sidebar.profile.label",
+              defaultMessage: "Profile",
+            })}
+          </span>
         </NavLink>
 
         <NavLink
           to="/billing"
           className={({ isActive }) => `nav-item${isActive ? " active" : ""}`}
         >
-          <span className="nav-icon" role="img" aria-label="billing">
+          <span className="nav-icon" role="img" aria-label={intl.formatMessage({
+            id: "sidebar.billing.aria",
+            defaultMessage: "billing",
+          })}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -89,7 +115,12 @@ const Sidebar = () => {
               <line x1="2" y1="10" x2="22" y2="10" />
             </svg>
           </span>
-          <span className="nav-label">Billing</span>
+          <span className="nav-label">
+            {intl.formatMessage({
+              id: "sidebar.billing.label",
+              defaultMessage: "Billing",
+            })}
+          </span>
         </NavLink>
       </nav>
       <div className="sidebar-footer">
@@ -98,7 +129,10 @@ const Sidebar = () => {
           className="nav-item back-link"
           onClick={() => handleBackToStudio()}
         >
-          <span className="nav-icon" role="img" aria-label="back">
+          <span className="nav-icon" role="img" aria-label={intl.formatMessage({
+            id: "sidebar.back.aria",
+            defaultMessage: "back",
+          })}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -117,7 +151,12 @@ const Sidebar = () => {
               <path d="M21 21V3a2 2 0 0 0-2-2H10"></path>
             </svg>
           </span>
-          <span className="nav-label">Back to Studio</span>
+          <span className="nav-label">
+            {intl.formatMessage({
+              id: "sidebar.back.label",
+              defaultMessage: "Back to Studio",
+            })}
+          </span>
         </button>
       </div>
     </aside>
