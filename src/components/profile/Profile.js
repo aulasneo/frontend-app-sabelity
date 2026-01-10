@@ -14,7 +14,11 @@ import SuccessModal from "../modals/SuccessModal";
 import ErrorModal from "../modals/ErrorModal";
 import ProfileConfirmChangesModal from "../modals/ProfileConfirmChangesModal";
 import DowngradeBlockedModal from "../modals/DowngradeBlockedModal";
-import { cancelSubscription, addOrUpdateProduct } from "../../data/service";
+import { cancelSubscription } from "../../data/service";
+import {
+  computeSubscriptionUpdateOps,
+  runSubscriptionUpdateOps,
+} from "../../utils/subscriptionUpdates";
 import { useSubscriptions } from "../../contexts/SubscriptionsContext";
 import "./profile.css";
 
@@ -93,19 +97,16 @@ const ProfileInner = () => {
       const base = packsByProduct || {};
       const subscriptionId = currentSubscription.id;
 
-      const ops = [];
       const newItems = [];
+
+      const ops = computeSubscriptionUpdateOps(base, desired);
 
       Object.keys(desired).forEach((priceId) => {
         const currentQty = base[priceId] || 0;
         const nextQty = desired[priceId] ?? currentQty;
-        const diff = nextQty - currentQty;
-        if (!diff) return;
 
-        // Si el usuario ya tiene este producto (currentQty > 0), usamos addOrUpdateProduct
-        if (currentQty > 0) {
-          ops.push(addOrUpdateProduct(subscriptionId, priceId, diff));
-        } else if (nextQty > 0) {
+        // Producto nuevo (no presente en la suscripción actual): ir por checkout.
+        if (!currentQty && nextQty > 0) {
           // Producto nuevo (no presente en la suscripción actual): ir por checkout.
           // Para este endpoint el backend espera el ID de PRODUCTO de Stripe
           // (stripe_id, "prod_...") como plan_type.
@@ -138,7 +139,7 @@ const ProfileInner = () => {
 
       // 1) Aplicar primero updates sobre productos ya existentes
       if (ops.length) {
-        await Promise.all(ops);
+        await runSubscriptionUpdateOps(subscriptionId, ops);
       }
 
       // 2) Si hay productos nuevos y tenemos startMultiCheckout disponible, iniciar checkout

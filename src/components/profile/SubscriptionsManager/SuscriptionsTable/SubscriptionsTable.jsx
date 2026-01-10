@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useIntl } from "react-intl";
 import subsMessages from "../subscriptionsMessages";
 import { useSubscriptions } from "../../../../contexts/SubscriptionsContext";
+import Button from "../../../buttons/Button";
 import "../../../modals/stylesCart.css";
 
 // Tabla de suscripciones: muestra productos comprados (arriba) y disponibles (abajo)
@@ -252,43 +253,59 @@ const SubscriptionsTable = ({
           .map((item) => {
             const qty = getCurrentQty(item);
             return (
-          <div
-            key={getProductKey(item) || item.id || item.stripeId || item.priceId}
-            className="subs-item-line"
-          >
-            {/* Subscriptions column: vacío / placeholder */}
-            <div className="subs-item-amount">-</div>
-            {/* Plan */}
-            <div className="subs-item-title">{getPlan(item)}</div>
-            {/* Price */}
-            <div className="subs-item-price">{getPrice(item)}</div>
-            {/* Controles Qty estilo botones, deshabilitados por ahora */}
-            <div className="spc-actions">
-              <button
-                className="qty-btn"
-                type="button"
-                onClick={() => updateQuantity(item, -1)}
-                disabled={qty <= 0}
+              <div
+                key={getProductKey(item) || item.id || item.stripeId || item.priceId}
+                className="subs-item-line"
               >
-                -
-              </button>
-              <input
-                className="qty-input"
-                type="number"
-                min="0"
-                value={qty}
-                readOnly
-              />
-              <button
-                className="qty-btn"
-                type="button"
-                onClick={() => updateQuantity(item, 1)}
-              >
-                +
-              </button>
-            </div>
-          </div>
-        );
+                {/* Subscriptions column: vacío / placeholder */}
+                <div className="subs-item-amount">-</div>
+                {/* Plan */}
+                <div className="subs-item-title">{getPlan(item)}</div>
+                {/* Price */}
+                <div className="subs-item-price">{getPrice(item)}</div>
+                {/* Controles: botón Subscribe (primario) cuando qty es 0; - qty + una vez que se agregó */}
+                <div className="spc-actions">
+                  {qty <= 0 ? (
+                    <Button
+                      variant="primary"
+                      onClick={() => updateQuantity(item, 1)}
+                    >
+                      {intl.formatMessage(
+                        subsMessages.subscribeButton || {
+                          id: "profile.available.subscribe.fallback",
+                          defaultMessage: "Subscribe",
+                        }
+                      )}
+                    </Button>
+                  ) : (
+                    <>
+                      <button
+                        className="qty-btn"
+                        type="button"
+                        onClick={() => updateQuantity(item, -1)}
+                        disabled={qty <= 0}
+                      >
+                        -
+                      </button>
+                      <input
+                        className="qty-input"
+                        type="number"
+                        min="0"
+                        value={qty}
+                        readOnly
+                      />
+                      <button
+                        className="qty-btn"
+                        type="button"
+                        onClick={() => updateQuantity(item, 1)}
+                      >
+                        +
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
           })
       ) : (
         <div className="subs-empty">

@@ -15,7 +15,10 @@ import PlanLimitModal from "../modals/PlanLimitModal";
 import ErrorModal from "../modals/ErrorModal";
 import SuccessModal from "../modals/SuccessModal";
 import DowngradeBlockedModal from "../modals/DowngradeBlockedModal";
-import { addOrUpdateProduct } from "../../data/service";
+import {
+  computeSubscriptionUpdateOps,
+  runSubscriptionUpdateOps,
+} from "../../utils/subscriptionUpdates";
 
 const Home = () => {
   const intl = useIntl();
@@ -121,22 +124,14 @@ const Home = () => {
       });
 
       const subscriptionId = currentSubscription.id;
-      const ops = [];
-
-      Object.keys(desiredMap).forEach((priceId) => {
-        const currentQty = Number(base[priceId] || 0);
-        const nextQty = Number(desiredMap[priceId] ?? currentQty);
-        const diff = nextQty - currentQty; // puede ser positivo o negativo
-        if (!diff) return;
-        ops.push(addOrUpdateProduct(subscriptionId, priceId, diff));
-      });
+      const ops = computeSubscriptionUpdateOps(base, desiredMap);
 
       if (!ops.length) {
         closeCart();
         return;
       }
 
-      await Promise.all(ops);
+      await runSubscriptionUpdateOps(subscriptionId, ops);
       if (typeof refreshAll === "function") {
         try {
           await refreshAll();
