@@ -12,6 +12,7 @@ const SubscriptionsTable = ({
   currentTotalCourses,
   coursesInUse,
   onBlockedDowngrade,
+  onSubscribeProduct,
 }) => {
   const intl = useIntl();
   const { products = [], packsByProduct = {} } = useSubscriptions() || {};
@@ -268,7 +269,11 @@ const SubscriptionsTable = ({
                   {qty <= 0 ? (
                     <Button
                       variant="primary"
-                      onClick={() => updateQuantity(item, 1)}
+                      onClick={() => {
+                        if (typeof onSubscribeProduct === "function") {
+                          onSubscribeProduct(item);
+                        }
+                      }}
                     >
                       {intl.formatMessage(
                         subsMessages.subscribeButton || {

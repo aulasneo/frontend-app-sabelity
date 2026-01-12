@@ -12,6 +12,7 @@ const SubscriptionsManager = ({
   currentTotalCourses,
   coursesInUse,
   onBlockedDowngrade,
+  onSubscribeProduct,
 }) => {
   const intl = useIntl();
   const { loading, error } = useSubscriptions() || {};
@@ -37,6 +38,7 @@ const SubscriptionsManager = ({
             currentTotalCourses={currentTotalCourses}
             coursesInUse={coursesInUse}
             onBlockedDowngrade={onBlockedDowngrade}
+            onSubscribeProduct={onSubscribeProduct}
           />
         </div>
       )}

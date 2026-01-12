@@ -8,6 +8,8 @@ import messages from "./SubscriptionsManager/subscriptionsMessages";
 import homeMessages from "../home/messages";
 import { computeCurrentTotalsFromSubs } from "../home/cartTotals";
 import { useBilling } from "../../contexts/BillingContext";
+import { useHomeCart } from "../home/useHomeCart";
+import CartModal from "../modals/CartModal";
 import CancelSubscriptionButton from "../modals/CancelSubscriptionButton";
 import ConfirmCancelSubscriptionModal from "../modals/ConfirmCancelSubscriptionModal";
 import SuccessModal from "../modals/SuccessModal";
@@ -44,11 +46,35 @@ const ProfileInner = () => {
   const [subsManagerKey, setSubsManagerKey] = useState(0);
   const [blockDowngradeModalOpen, setBlockDowngradeModalOpen] = useState(false);
   const [blockReason, setBlockReason] = useState("downgrade"); // "downgrade" | "cancel"
+  const [cartSelectedProduct, setCartSelectedProduct] = useState(null);
 
   const currentTotalsFromSubs = computeCurrentTotalsFromSubs(
     subsRaw,
     products || []
   );
+
+  // Reutilizar la lógica de carrito de Home también en Profile para compras nuevas
+  const {
+    showCart: showProfileCart,
+    openCart: openProfileCart,
+    closeCart: closeProfileCart,
+    cartQuantities: profileCartQuantities,
+    setQty: setProfileCartQty,
+    incQty: incProfileCartQty,
+    decQty: decProfileCartQty,
+    totalItems: profileCartTotalItems,
+    cartSummary: profileCartSummary,
+    handleCartCheckout: handleProfileCartCheckout,
+  } = useHomeCart({
+    intl,
+    messages: homeMessages,
+    startMultiCheckout,
+    setErrorModalMessage,
+    setErrorModalOpen,
+    currentCourses: currentTotalsFromSubs.totalCourses,
+    currentTotal: currentTotalsFromSubs.totalAmount,
+    ownedQuantities: packsByProduct || {},
+  });
 
   useEffect(() => {
     // Sincronizar inventory y suscripción activa desde el contexto
@@ -70,6 +96,19 @@ const ProfileInner = () => {
       inv.courses_in_use ??
       0
     );
+  };
+
+  // Abrir el CartModal (reutilizado de Home) cuando en Profile se pulsa "Subscribe"
+  const handleSubscribeProduct = (product) => {
+    if (!product) return;
+    const priceId =
+      product.stripeId || product.priceId || product.price_id || product.id;
+    if (!priceId) return;
+
+    // Inicializar el carrito con 1 unidad de ese producto
+    setProfileCartQty(priceId, 1);
+    setCartSelectedProduct(product);
+    openProfileCart();
   };
 
   const onCancelSubscription = () => {
@@ -298,6 +337,7 @@ const ProfileInner = () => {
           currentTotalCourses={currentTotalsFromSubs.totalCourses}
           coursesInUse={getCoursesInUse()}
           onBlockedDowngrade={() => setBlockDowngradeModalOpen(true)}
+          onSubscribeProduct={handleSubscribeProduct}
         />
 
         <SubscriptionsFooter
@@ -372,6 +412,27 @@ const ProfileInner = () => {
               ? "To cancel your subscription you must first delete all your courses."
               : undefined
           }
+        />
+
+        {/* CartModal reutilizado de Home para compras nuevas desde Profile */}
+        <CartModal
+          showCart={showProfileCart}
+          closeCart={closeProfileCart}
+          intl={intl}
+          messages={homeMessages}
+          products={cartSelectedProduct ? [cartSelectedProduct] : []}
+          cartQuantities={profileCartQuantities}
+          setQty={setProfileCartQty}
+          incQty={incProfileCartQty}
+          decQty={decProfileCartQty}
+          totalItems={profileCartTotalItems}
+          onCheckout={handleProfileCartCheckout}
+          onApplyUpdates={undefined}
+          ownedQuantities={packsByProduct || {}}
+          hasNewProducts
+          cartSummary={profileCartSummary}
+          coursesInUse={getCoursesInUse()}
+          onBlockedDowngrade={() => setBlockDowngradeModalOpen(true)}
         />
       </div>
     </main>
