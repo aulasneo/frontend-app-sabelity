@@ -41,15 +41,22 @@ const SubscriptionsTable = ({
   const getProductKey = (item) => {
     if (!item) return null;
 
-    // Priorizar siempre IDs de precio explícitos
-    if (item.price && item.price.id) return item.price.id; // Stripe price object
-    if (item.priceId) return item.priceId;
-    if (item.price_id) return item.price_id;
-    if (item.stripeId) return item.stripeId; // en nuestro catálogo suele ser el price_id
+    // Priorizar siempre identificadores de PRODUCTO (prod_...) para que
+    // coincidan con los items reales de Stripe y con packsByProduct.
+    if (item.price && item.price.product) return item.price.product; // Stripe price -> product
+    if (item.productId) return item.productId;
+    if (item.product_id) return item.product_id;
+    if (item.product) return item.product;
+    if (item.stripeId) return item.stripeId; // en nuestro catálogo suele ser el product_id
 
     // IDs de plan lógicos que también usamos como clave en otros contextos
     if (item.planType) return item.planType;
     if (item.plan_type) return item.plan_type;
+
+    // Como fallback, usar IDs de precio explícitos cuando no tengamos product
+    if (item.price && item.price.id) return item.price.id; // Stripe price object
+    if (item.priceId) return item.priceId;
+    if (item.price_id) return item.price_id;
 
     // Como último recurso, usar id solo si parece un price_id de Stripe
     if (item.id && String(item.id).startsWith("price_")) {
@@ -125,7 +132,11 @@ const SubscriptionsTable = ({
     const key = getProductKey(item);
     if (!key) return;
     setQuantitiesByProduct((prev) => {
-      const current = prev[key] ?? packsByProduct[key] ?? 0;
+      const baseOwned = packsByProduct[key] || 0;
+      const current = prev[key] ?? baseOwned ?? 0;
+      // Permitimos bajar hasta 0 incluso para productos ya comprados.
+      // El diff resultante (next - baseOwned) puede ser negativo y será
+      // interpretado por el backend como una reducción o eliminación.
       const next = Math.max(0, current + delta);
       if (next === current) return prev;
       const updated = { ...prev, [key]: next };

@@ -170,8 +170,21 @@ const ProfileInner = () => {
           newItems.push({ planType, quantity: nextQty });
         }
       });
-
+      
       if (!ops.length && !newItems.length) {
+        setConfirmChangesOpen(false);
+        return;
+      }
+
+      // Si con estos cambios el total de cursos objetivo queda en 0 y no
+      // estamos añadiendo productos nuevos vía checkout, Stripe no permite
+      // dejar la suscripción sin items. En ese caso usamos el flujo de
+      // cancelación completo en lugar de intentar borrar el último item.
+      const targetTotalCourses =
+        (currentTotalsFromSubs?.totalCourses || 0) + (summaryChangesCourses || 0);
+
+      if (targetTotalCourses === 0 && !newItems.length) {
+        await performCancelSubscription();
         setConfirmChangesOpen(false);
         return;
       }

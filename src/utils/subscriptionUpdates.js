@@ -31,7 +31,24 @@ export function computeSubscriptionUpdateOps(baseQuantities = {}, desiredQuantit
     if (!diff) {
       return;
     }
+
+    // Si la cantidad actual es 0 y la siguiente es <= 0, no hay nada que
+    // actualizar en Stripe: evitar enviar diffs negativos que el backend
+    // interpretaría como "añadir un item nuevo con cantidad negativa".
+    if (currentQty === 0 && nextQty <= 0) {
+      return;
+    }
+
     ops.push({ priceId, diff, currentQty, nextQty });
+  });
+
+  // Log de depuración para ver qué operaciones se están calculando
+  // (priceId, diff, cantidades actuales y deseadas).
+  // Útil para entender por qué algunos productos se actualizan y otros no.
+  // eslint-disable-next-line no-console
+  console.log("computeSubscriptionUpdateOps -> ops", ops, {
+    baseQuantities,
+    desiredQuantities,
   });
 
   return ops;
@@ -50,6 +67,14 @@ export async function runSubscriptionUpdateOps(subscriptionId, ops = []) {
   }
 
   for (const { priceId, diff } of ops) {
+    // Log de depuración para ver cada llamada concreta al backend.
+    // eslint-disable-next-line no-console
+    console.log("runSubscriptionUpdateOps -> calling addOrUpdateProduct", {
+      subscriptionId,
+      priceId,
+      diff,
+    });
+
     // addOrUpdateProduct ya valida que diff !== 0 y que sea entero.
     // Ejecutamos en serie para no saturar Stripe/backend con peticiones concurrentes.
     // Si alguna falla, propagamos el error para que el caller muestre el modal de error.
