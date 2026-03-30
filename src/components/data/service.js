@@ -4,11 +4,12 @@ import { getConfig, camelCaseObject } from '@edx/frontend-platform';
 export const getUserData = async (username) => {
   try {
     const res = await getAuthenticatedHttpClient().get(
-      `${getConfig().LMS_BASE_URL}/api/user/v1/accounts/${username}`
+      `${getConfig().LMS_BASE_URL}/api/user/v1/accounts/${username}`,
     );
     return camelCaseObject(res.data || res.body);
   } catch (error) {
-    console.error("Error fetching user data:", error);
+    // eslint-disable-next-line no-console
+    console.error('Error fetching user data:', error);
     throw error;
   }
 };
@@ -16,10 +17,11 @@ export const getUserData = async (username) => {
 export const getCourses = async () => {
   try {
     const res = await getAuthenticatedHttpClient().get(
-      `${getConfig().LMS_BASE_URL}/api/courses/v1/courses/`
+      `${getConfig().LMS_BASE_URL}/api/courses/v1/courses/`,
     );
     return camelCaseObject(res.data || res.body);
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Error fetching user data:', error);
     throw error;
   }
@@ -30,7 +32,7 @@ export const updateUserPlan = async (username, newLimit) => {
   const data = {
     extended_profile: [
       {
-        field_name: "planLimit",
+        field_name: 'planLimit',
         field_value: newLimit,
       },
     ],
@@ -38,10 +40,11 @@ export const updateUserPlan = async (username, newLimit) => {
 
   try {
     const response = await getAuthenticatedHttpClient().patch(url, data, {
-      headers: { "Content-Type": "application/merge-patch+json" },
+      headers: { 'Content-Type': 'application/merge-patch+json' },
     });
     return camelCaseObject(response.data);
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Error updating plan:', error);
     throw error;
   }

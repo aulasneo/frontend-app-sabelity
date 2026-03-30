@@ -1,20 +1,19 @@
-import React, { useState, useEffect } from "react";
-import { Button, ModalDialog } from "@openedx/paragon";
-import { useIntl } from "@edx/frontend-platform/i18n";
-import { getAuthenticatedUser } from "@edx/frontend-platform/auth";
-import { getConfig } from "@edx/frontend-platform";
-import { getUserData, updateUserPlan, getCourses } from "../data/service";
-import PlanCard from "../cards/PlanCard";
-import "./stylesHome.css";
-import messages from "./messages";
+import React, { useState, useEffect } from 'react';
+import { Button, ModalDialog } from '@openedx/paragon';
+import { useIntl } from '@edx/frontend-platform/i18n';
+import { getAuthenticatedUser } from '@edx/frontend-platform/auth';
+import { getConfig } from '@edx/frontend-platform';
+import { getUserData, getCourses } from '../data/service';
+import './stylesHome.css';
+import messages from './messages';
 
 const Home = () => {
   const intl = useIntl();
   const [planLimit, setPlanLimit] = useState();
   const [coursesCount, setCoursesCount] = useState();
   const [showModal, setShowModal] = useState(false);
-  const [newPlanLimit, setNewPlanLimit] = useState();
-  const [deleteCourses, setDeleteCourses] = useState();
+  const [newPlanLimit] = useState();
+  const [deleteCourses] = useState();
 
   const user = getAuthenticatedUser();
 
@@ -24,7 +23,8 @@ const Home = () => {
         const data = await getUserData(user.username);
         setPlanLimit(data.extendedProfile[0].fieldValue);
       } catch (error) {
-        console.error("Error fetching user data:", error);
+        // eslint-disable-next-line no-console
+        console.error('Error fetching user data:', error);
       }
     };
     fetchPlanLimit();
@@ -36,31 +36,12 @@ const Home = () => {
         const data = await getCourses();
         setCoursesCount(data.pagination.count);
       } catch (error) {
-        console.error("Error fetching courses:", error);
+        // eslint-disable-next-line no-console
+        console.error('Error fetching courses:', error);
       }
     };
     fetchCourses();
   }, []);
-
-  const handlePlanSelect = async (newLimit) => {
-    const newLimitNumber = parseInt(newLimit, 10);
-    const currentCoursesCount = parseInt(coursesCount, 10);
-
-    if (newLimitNumber < currentCoursesCount) {
-      const deleteCount = currentCoursesCount - newLimitNumber;
-      setDeleteCourses(deleteCount);
-      setNewPlanLimit(newLimit);
-      setShowModal(true);
-      return;
-    }
-
-    try {
-      await updateUserPlan(user.username, newLimit);
-      setPlanLimit(newLimit);
-    } catch (error) {
-      console.error("Error updating plan:", error);
-    }
-  };
 
   const handleCloseModal = () => setShowModal(false);
 
@@ -71,19 +52,20 @@ const Home = () => {
     if (redirectBackStudio) {
       window.location.href = redirectBackStudio;
     } else {
-      console.error("Redirect URL is undefined");
+      // eslint-disable-next-line no-console
+      console.error('Redirect URL is undefined');
     }
   };
 
   const handleSendEmail = () => {
-    const email = "info@aulasneo.com";
-    const subject = "Suscripcion para Sabelity";
-    const body = "Hola, me quiero suscribir a Sabelity...";
+    const email = 'info@aulasneo.com';
+    const subject = 'Suscripcion para Sabelity';
+    const body = 'Hola, me quiero suscribir a Sabelity...';
 
     const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(
-      subject
+      subject,
     )}&body=${encodeURIComponent(body)}`;
-    window.open(mailtoLink, "_blank");
+    window.open(mailtoLink, '_blank');
   };
 
   // const plans = [
@@ -171,7 +153,7 @@ const Home = () => {
           <p className="alertMinPlan">
             {intl.formatMessage(messages.modalContent, {
               limit: newPlanLimit,
-              deleteCourses: deleteCourses,
+              deleteCourses,
             })}
           </p>
         </ModalDialog.Body>
