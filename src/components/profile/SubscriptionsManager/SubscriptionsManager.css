@@ -4,7 +4,7 @@
 }
 .subs-title {
   margin: 0 0 0.75rem;
-  color: #062b60;
+  color: var(--pgn-color-primary-500);
   font-size: 1.5rem;
   font-weight: 700;
 }
@@ -15,9 +15,9 @@
 }
 
 .subs-card {
-  border: 1px solid #eee;
+  border: 1px solid var(--pgn-color-light-400);
   border-radius: 10px;
-  background: #fff;
+  background: var(--pgn-color-white);
   padding: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
@@ -34,33 +34,33 @@
   font-weight: 700;
   border-radius: 9999px;
   padding: 2px 10px;
-  color: #062b60;
-  background: #eef2ff; /* default */
+  color: var(--pgn-color-primary-500);
+  background: var(--pgn-color-info-100); /* default */
 }
 
 /* variantes por estado */
 .subs-active {
-  background: #e6ffed;
-  color: #065f46;
+  background: var(--pgn-color-success-100);
+  color: var(--pgn-color-success-500);
 }
 .subs-trialing {
-  background: #fff7ed;
-  color: #9a3412;
+  background: var(--pgn-color-warning-100);
+  color: var(--pgn-color-warning-700);
 }
 .subs-canceled,
 .subs-cancelled {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: var(--pgn-color-danger-100);
+  color: var(--pgn-color-danger-500);
 }
 .subs-unknown {
-  background: #f3f4f6;
-  color: #374151;
+  background: var(--pgn-color-light-200);
+  color: var(--pgn-color-gray-700);
 }
 
 /* .subs-refresh {
   background: transparent;
   border: none;
-  color: #ef9245;
+  color: var(--pgn-color-accent-a);
   font-weight: 600;
   cursor: pointer;
   padding: 4px 6px;
@@ -68,7 +68,7 @@
 
 .subs-line {
   height: 1px;
-  background: #e5e7eb;
+  background: var(--pgn-color-light-400);
   margin: 12px 0;
 }
 
@@ -78,8 +78,8 @@
 
 /* ========== Modal de Checkout (estilo similar al primer modal) ========== */
 .subs-modal-row {
-  border: 1px solid #e5e7eb;
-  background: #fff;
+  border: 1px solid var(--pgn-color-light-400);
+  background: var(--pgn-color-white);
   border-radius: 10px;
   padding: 10px 12px;
   display: grid;
@@ -93,10 +93,10 @@
 }
 .subs-modal-title .name {
   font-weight: 700;
-  color: #111827;
+  color: var(--pgn-color-gray-900);
 }
 .subs-modal-title .price {
-  color: #6b7280;
+  color: var(--pgn-color-gray-500);
   font-size: 0.95rem;
 }
 .subs-modal-actions { display: flex; gap: 8px; align-items: center; }
@@ -108,7 +108,7 @@
 }
 .subs-modal-subtotal {
   font-weight: 700;
-  color: #4c1d95; /* similar al violeta */
+  color: var(--pgn-color-accent-b); /* similar al violeta */
 }
 .subs-items {
   list-style: none;
@@ -123,24 +123,24 @@
   column-gap: 1.25rem; /* plan y price más juntos */
   align-items: center;
   padding: 4px 25px 12px 12px;
-  color: #6b7280;
+  color: var(--pgn-color-gray-500);
   font-weight: 600;
   font-size: 1rem;
 }
 
 .subs-item-title {
   font-weight: 600;
-  color: #2b2b2b;
+  color: var(--pgn-color-gray-900);
   font-size: 1rem;
   padding-left: 4px; /* menos padding para acercar visualmente el precio al plan */
 }
 .subs-item-price {
-  color: #062b60;
+  color: var(--pgn-color-primary-500);
   font-weight: 700;
   font-size: 0.9rem; /* Precio un poco más chico visualmente */
 }
 .subs-item-qty {
-  color: #6b7280;
+  color: var(--pgn-color-gray-500);
 }
 
 .subs-actions {
@@ -151,7 +151,7 @@
 }
 .subs-actions input[type=\"text\"],
 .subs-actions input[type=\"number\"] {
-  border: 1px solid #ddd;
+  border: 1px solid var(--pgn-color-light-400);
   border-radius: 6px;
   padding: 6px 8px;
 }
@@ -160,9 +160,9 @@
   text-align: center;
 }
 .subs-btn {
-  background: #ef9245;
-  color: #fff;
-  border: 1px solid #ef9245;
+  background: var(--pgn-color-accent-a);
+  color: var(--pgn-color-white);
+  border: 1px solid var(--pgn-color-accent-a);
   border-radius: 6px;
   padding: 6px 12px;
   font-weight: 600;
@@ -174,16 +174,16 @@
 }
 
 .subs-loading {
-  color: #6b7280;
+  color: var(--pgn-color-gray-500);
 }
 .subs-error {
-  color: #b91c1c;
+  color: var(--pgn-color-danger-500);
 }
 .subs-success {
-  color: #065f46;
+  color: var(--pgn-color-success-500);
 }
 .subs-empty {
-  color: #6b7280;
+  color: var(--pgn-color-gray-500);
   text-align: center;
 }
 
@@ -210,16 +210,16 @@
   column-gap: 1.25rem;
   align-items: center;
   padding: 10px 12px;
-  border: 1px solid #eee;
+  border: 1px solid var(--pgn-color-light-400);
   border-radius: 10px;
-  background: #fff;
+  background: var(--pgn-color-white);
   margin-bottom: 8px; /* separa visualmente cada producto */
 }
 .subs-item-amount {
   min-width: 28px;
   text-align: center;
   font-weight: 700;
-  color: #111827;
+  color: var(--pgn-color-gray-900);
   font-size: 1rem;
 }
 .spc-actions {
@@ -231,10 +231,10 @@
 .qty-btn {
   width: 32px;
   height: 32px;
-  border: 1px solid #ef9245;
+  border: 1px solid var(--pgn-color-accent-a);
   border-radius: 6px;
-  background: #fff7f1;
-  color: #ef9245;
+  background: var(--pgn-color-warning-100);
+  color: var(--pgn-color-accent-a);
   font-weight: 700;
   cursor: pointer;
 }
@@ -243,7 +243,7 @@
   text-align: center;
   padding: 6px;
   font-size: 14px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--pgn-color-light-400);
   border-radius: 6px;
   outline: none;
 }
@@ -258,9 +258,9 @@
   gap: 12px;
 }
 .subs-product-card {
-  border: 1px solid #eaeaea;
+  border: 1px solid var(--pgn-color-light-400);
   border-radius: 10px;
-  background: #fff;
+  background: var(--pgn-color-white);
   padding: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   display: flex;
@@ -269,9 +269,9 @@
 }
 .spc-title {
   font-weight: 700;
-  color: #2b2b2b;
+  color: var(--pgn-color-gray-900);
 }
 .spc-price {
-  color: #062b60;
+  color: var(--pgn-color-primary-500);
   font-weight: 700;
 }

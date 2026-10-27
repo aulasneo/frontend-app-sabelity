@@ -1,9 +1,9 @@
 .billing-card {
-  border: 1px solid #eee;
+  border: 1px solid var(--pgn-color-light-400);
   border-radius: 12px;
   padding: 16px;
   margin-bottom: 16px;
-  background: #fff;
+  background: var(--pgn-color-white);
 }
 
 .billing-header-row {
@@ -23,11 +23,11 @@
 }
 
 .billing-text-muted {
-  color: #6b7280;
+  color: var(--pgn-color-gray-500);
 }
 
 .billing-error {
-  color: #b91c1c;
+  color: var(--pgn-color-danger-500);
 }
 
 .billing-upcoming-section {
@@ -35,7 +35,7 @@
 }
 
 .billing-upcoming-title {
-  color: #062b60;
+  color: var(--pgn-color-primary-500);
   margin-bottom: 12px;
   font-size: 1.25rem;
   font-weight: 700;
@@ -50,10 +50,10 @@
   flex-wrap: wrap;
   gap: 16px;
   margin-top: 12px;
-  color: #4b5563;
+  color: var(--pgn-color-gray-700);
   justify-content: flex-end;
   padding-top: 1rem;
-  border-top: 1px solid #c2bfbf;
+  border-top: 1px solid var(--pgn-color-light-400);
 }
 
 .billing-upcoming-summary span {
@@ -66,8 +66,8 @@
 }
 
 .billing-upcoming-header-row {
-  border-bottom: 1px solid #e5e7eb;
-  color: #6b7280;
+  border-bottom: 1px solid var(--pgn-color-light-400);
+  color: var(--pgn-color-gray-500);
 }
 
 .billing-upcoming-th {
@@ -80,7 +80,7 @@
 }
 
 .billing-upcoming-row {
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid var(--pgn-color-light-200);
 }
 
 .billing-upcoming-td {
@@ -97,14 +97,14 @@
 
 .billing-upcoming-empty {
   padding: 8px 4px;
-  color: #9ca3af;
+  color: var(--pgn-color-gray-400);
   font-size: 14px;
 }
 
 .billing-upcoming-period {
   margin-top: 2px;
   font-size: 12px;
-  color: #6b7280;
+  color: var(--pgn-color-gray-500);
 }
 
 .billing-history-pagination-wrapper {
@@ -134,7 +134,7 @@
 
 .billing-page-info {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--pgn-color-gray-500);
 }
 
 .billing-mt-6 {

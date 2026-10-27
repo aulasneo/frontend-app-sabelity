@@ -1,10 +1,10 @@
 /* Profile specific UI states */
 .profile-loading {
-  color: #6b7280; /* gray-500 */
+  color: var(--pgn-color-gray-500); /* gray-500 */
 }
 
 .profile-error {
-  color: #b91c1c; /* red-700 */
+  color: var(--pgn-color-danger-500); /* red-700 */
 }
 
 /* Optional wrapper tweaks for Profile page */

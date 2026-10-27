@@ -14,7 +14,7 @@ body {
 /* Estilos para el título */
 h1 {
   text-align: center;
-  color: #062b60;
+  color: var(--pgn-color-primary-500);
   margin-bottom: 0.5rem;
   font-size: 3rem;
   font-weight: 700;
@@ -22,7 +22,7 @@ h1 {
 
 h2 {
   text-align: center;
-  color: #062b60;
+  color: var(--pgn-color-primary-500);
   font-size: 2.25rem;
   font-weight: 700;
 }
@@ -30,7 +30,7 @@ h2 {
 /* Estilos para el subtítulo */
 h3 {
   text-align: center;
-  color: #666666;
+  color: var(--pgn-color-gray-500);
   margin-bottom: 3rem;
   font-weight: 400;
   font-size: 1.1rem;
@@ -38,7 +38,7 @@ h3 {
 
 h4 {
   text-align: center;
-  color: #666666;
+  color: var(--pgn-color-gray-500);
   font-weight: 400;
   font-size: 1.1rem;
 }
@@ -54,8 +54,8 @@ h4 {
 }
 
 .content-buttons .btn-outline-primary {
-  border: 2px solid #ff6b35;
-  color: #ff6b35;
+  border: 2px solid var(--pgn-color-accent-a);
+  color: var(--pgn-color-accent-a);
   padding: 0.6rem 2.5rem;
   font-weight: 600;
   font-size: 0.95rem;
@@ -66,31 +66,31 @@ h4 {
 }
 
 .content-buttons .btn-outline-primary:hover {
-  background-color: #ff6b35;
+  background-color: var(--pgn-color-accent-a);
   color: white;
 }
 
 /* Estilos para el mensaje de alerta */
 .alertMinPlan {
-  color: #d32f2f;
-  background-color: #fde7e7;
+  color: var(--pgn-color-danger-500);
+  background-color: var(--pgn-color-danger-100);
   padding: 1rem;
   border-radius: 4px;
   margin-top: 3.2rem;
   text-align: center;
   font-size: 0.95rem;
-  border-left: 4px solid #d32f2f;
+  border-left: 4px solid var(--pgn-color-danger-500);
 }
 
 .alertSuccess {
-  color: #1e7b34;
-  background-color: #e6f6ea;
+  color: var(--pgn-color-success-500);
+  background-color: var(--pgn-color-success-100);
   padding: 1rem;
   border-radius: 4px;
   margin-top: 3.2rem;
   text-align: center;
   font-size: 0.95rem;
-  border-left: 4px solid #1e7b34;
+  border-left: 4px solid var(--pgn-color-success-500);
 }
 
 .cancel-button-suscription {

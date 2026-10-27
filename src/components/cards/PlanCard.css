@@ -10,7 +10,7 @@
 
 /* Estilos base para todas las tarjetas */
 .plan-card {
-  background: #ffffff;
+  background: var(--pgn-color-white);
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   padding: 2rem 1.5rem;
@@ -18,7 +18,7 @@
   max-width: 300px;
   position: relative;
   transition: all 0.3s ease;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--pgn-color-light-400);
   text-align: center;
   overflow: visible;
   display: flex;
@@ -28,7 +28,7 @@
 
 /* Estilo para la tarjeta popular */
 .plan-card.popular {
-  border: 2px solid #4e359e;
+  border: 2px solid var(--pgn-color-accent-b);
   position: relative;
 }
 
@@ -40,7 +40,7 @@
 /* Etiqueta "Most Popular" */
 .popular-badge {
   position: absolute;
-  background: #4e359e;
+  background: var(--pgn-color-accent-b);
   color: white;
   padding: 0.25rem 1.5rem;
   font-size: 0.75rem;
@@ -58,13 +58,13 @@
 
 /* Badge de Plan Actual */
 /* .current-plan-badge {
-  background-color: #f0f0f0;
-  color: #4a5568;
+  background-color: var(--pgn-color-light-200);
+  color: var(--pgn-color-gray-700);
   padding: 0.75rem 1rem;
   border-radius: 6px;
   font-weight: 600;
   font-size: 0.95rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--pgn-color-light-400);
   text-align: center;
   width: 100%;
   box-sizing: border-box;
@@ -73,7 +73,7 @@
 /* Título de la tarjeta */
 .plan-card h2 {
   margin-bottom: 0.5rem;
-  color: #062b60;
+  color: var(--pgn-color-primary-500);
   font-size: 1.5rem;
   font-weight: 600;
   text-align: justify;
@@ -81,7 +81,7 @@
 
 /* Descripción de la tarjeta */
 .card-description {
-  color: #666666;
+  color: var(--pgn-color-gray-500);
   text-align: justify;
   min-height: 50px;
   font-size: 0.9rem;
@@ -103,14 +103,14 @@
 .card-price {
   font-size: 2.2rem;
   font-weight: 700;
-  color: #062b60;
+  color: var(--pgn-color-primary-500);
   line-height: 1;
 }
 
 /* Período (ej. /mes) */
 .card-mouth {
   font-size: 1rem;
-  color: #666666;
+  color: var(--pgn-color-gray-500);
   align-self: flex-end;
   margin-left: 0.25rem;
 }

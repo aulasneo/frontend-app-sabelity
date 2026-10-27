@@ -13,6 +13,12 @@ GitHub repositories by clicking the green "Use this template" button above.
 The rest of this document describes how to work with your new micro-frontend
 **after you've created a new repository from the template.**
 
+Verawood upgrade
+****************
+
+See `the migration notes <docs/how_tos/verawood.rst>`_ for dependency,
+design-token theming and frontend-base deployment decisions.
+
 Getting Started
 ***************
 
@@ -48,9 +54,9 @@ created when copying this template above.
 
   ``git clone https://github.com/openedx/frontend-app-[PLACEHOLDER].git``
 
-2. Use node v18.x.
+2. Use node v24.x.
 
-   The current version of the micro-frontend build scripts support node 18.
+   The current version of the micro-frontend build scripts support Node 24 for this application.
    Using other major versions of node *may* work, but this is unsupported.  For
    convenience, this repository includes an .nvmrc file to help in setting the
    correct node version via `nvm <https://github.com/nvm-sh/nvm>`_.

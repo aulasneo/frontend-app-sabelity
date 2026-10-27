@@ -39,9 +39,9 @@
   justify-content: space-between;
   align-items: center;
   padding: 12px 14px;
-  border: 1px solid #eaeaea;
+  border: 1px solid var(--pgn-color-light-400);
   border-radius: 10px;
-  background: #fff;
+  background: var(--pgn-color-white);
   box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 
@@ -52,11 +52,11 @@
 
 .cart-item-title {
   font-weight: 700;
-  color: #2b2b2b;
+  color: var(--pgn-color-gray-900);
 }
 
 .cart-item-price {
-  color: #6b7280; /* gray-500 */
+  color: var(--pgn-color-gray-500); /* gray-500 */
   font-size: 0.92rem;
   margin-top: 2px;
 }
@@ -70,24 +70,24 @@
 .qty-btn {
   width: 32px;
   height: 32px;
-  border: 1px solid #ef9245;
+  border: 1px solid var(--pgn-color-accent-a);
   border-radius: 6px;
-  background: #fff7f1;
-  color: #ef9245;
+  background: var(--pgn-color-warning-100);
+  color: var(--pgn-color-accent-a);
   font-weight: 700;
   cursor: pointer;
   transition: all .15s ease;
 }
 
 .qty-btn:hover {
-  background: #ffe9dc;
+  background: var(--pgn-color-warning-100);
 }
 
 .qty-input {
   width: 64px;
   text-align: center;
   padding: 6px 8px;
-  border: 1px solid #d1d5db; /* gray-300 */
+  border: 1px solid var(--pgn-color-light-400); /* gray-300 */
   border-radius: 6px;
   outline: none;
 }
@@ -110,16 +110,16 @@
   justify-content: space-between;
   margin-top: 12px;
   padding: 10px 12px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--pgn-color-light-400);
 }
 
 .cart-subtotal-label {
-  color: #374151; /* gray-700 */
+  color: var(--pgn-color-gray-700); /* gray-700 */
   font-weight: 600;
 }
 
 .cart-subtotal-value {
-  color: #062b60;
+  color: var(--pgn-color-primary-500);
   font-weight: 700;
 }
 
@@ -133,7 +133,7 @@
 }
 
 .cart-summary-col {
-  color: #6b7280; /* gray-500 */
+  color: var(--pgn-color-gray-500); /* gray-500 */
 }
 
 .cart-summary-col-content {
@@ -152,10 +152,10 @@
 }
 
 .subs-downgrade-main-text {
-  color: #111827;
+  color: var(--pgn-color-gray-900);
 }
 
 .subs-downgrade-details {
-  color: #6b7280;
+  color: var(--pgn-color-gray-500);
   font-size: 0.9rem;
 }

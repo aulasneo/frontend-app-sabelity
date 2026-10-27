@@ -16,13 +16,13 @@
 
 /* Estilo primario (naranja) */
 .custom-button.primary {
-  background-color: #ef9245;
-  color: #ffffff;
+  background-color: var(--pgn-color-accent-a);
+  color: var(--pgn-color-white);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .custom-button.primary:hover:not(:disabled) {
-  background-color: #ef9245e6;
+  background-color: var(--pgn-color-accent-a);
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
@@ -30,12 +30,12 @@
 /* Estilo outline (borde naranja) */
 .custom-button.outline {
   background-color: transparent;
-  color: #ef9245;
-  border: 2px solid #ef9245;
+  color: var(--pgn-color-accent-a);
+  border: 2px solid var(--pgn-color-accent-a);
 }
 
 .custom-button.outline:hover:not(:disabled) {
-  background-color: rgba(239, 146, 69, 0.1);
+  background-color: var(--pgn-color-warning-100);
   transform: translateY(-1px);
 }
 

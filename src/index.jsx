@@ -10,7 +10,7 @@ import { createRoot } from 'react-dom/client';
 import { Helmet } from 'react-helmet';
 
 import Header from '@edx/frontend-component-header';
-import FooterSlot from '@openedx/frontend-slot-footer';
+import { FooterSlot } from '@edx/frontend-component-footer';
 import messages from './i18n';
 
 import './index.scss';
@@ -18,9 +18,9 @@ import RoutesPages from './RoutesPages';
 import { SubscriptionsProvider } from './contexts/SubscriptionsContext';
 import { BillingProvider } from './contexts/BillingContext';
 
-subscribe(APP_READY, () => {
-  const root = createRoot(document.getElementById('root'));
+const root = createRoot(document.getElementById('root'));
 
+subscribe(APP_READY, () => {
   root.render(
     <StrictMode>
       <AppProvider>
@@ -40,8 +40,6 @@ subscribe(APP_READY, () => {
 });
 
 subscribe(APP_INIT_ERROR, (error) => {
-  const root = createRoot(document.getElementById('root'));
-
   root.render(
     <StrictMode>
       <ErrorPage message={error.message} />
